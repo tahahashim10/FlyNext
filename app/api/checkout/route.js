@@ -90,9 +90,26 @@ export async function POST(request) {
         data: { status: "CONFIRMED" },
       });
     } else {
+      // For flight bookings, call AFS booking API at checkout.
+      let afsResponse;
+      try {
+        afsResponse = await callAfsBooking({
+          firstName: booking.firstName,
+          lastName: booking.lastName,
+          email: booking.email,
+          passportNumber: booking.passportNumber,
+          flightIds: booking.flightIds,
+        });
+      } catch (error) {
+        return NextResponse.json({ error: "AFS booking failed: " + error.message }, { status: 400 });
+      }
+
       booking = await prisma.flightBooking.update({
         where: { id: parsedBookingId },
-        data: { status: "CONFIRMED" },
+        data: {
+          status: "CONFIRMED",
+          flightBookingReference: afsResponse.bookingReference,
+        },
       });
     }
 
@@ -112,4 +129,26 @@ export async function POST(request) {
     console.error("Checkout Error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
+}
+
+async function callAfsBooking(payload) {
+  const baseUrl = process.env.AFS_BASE_URL;
+  const apiKey = process.env.AFS_API_KEY;
+  if (!baseUrl || !apiKey) {
+    throw new Error("AFS API configuration is missing");
+  }
+  const url = new URL("/api/bookings", baseUrl);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`AFS booking API error: ${res.status} - ${errorText}`);
+  }
+  return res.json();
 }

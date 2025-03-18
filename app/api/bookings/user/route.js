@@ -215,6 +215,14 @@ export async function PATCH(request) {
           data: { status: "CANCELED" },
         });
       } else {
+
+        // For flight bookings, call the new AFS cancellation API first.
+        try {
+          await callAfsCancelBooking(booking);
+        } catch (error) {
+          return NextResponse.json({ error: "Failed to cancel flight booking via AFS: " + error.message }, { status: 400 });
+        }
+
         booking = await prisma.flightBooking.update({
           where: { id: bookingId },
           data: { status: "CANCELED" },
@@ -238,6 +246,36 @@ export async function PATCH(request) {
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
+
+// Helper function for calling AFS cancellation API
+async function callAfsCancelBooking(booking) {
+  const baseUrl = process.env.AFS_BASE_URL;
+  const apiKey = process.env.AFS_API_KEY;
+  if (!baseUrl || !apiKey) {
+    throw new Error("AFS API configuration is missing.");
+  }
+  // Call the new AFS API endpoint to cancel a flight booking.
+  const url = new URL("/api/bookings/cancel", baseUrl);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    // Now include both bookingReference and lastName as required by AFS.
+    body: JSON.stringify({
+      bookingReference: booking.flightBookingReference,
+      lastName: booking.lastName,
+    }),
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`AFS cancellation API error: ${res.status} - ${errorText}`);
+  }
+  return res.json();
+}
+
+
 
 
 // for U15
@@ -367,37 +405,12 @@ export async function POST(request) {
 
     let flightBooking = null;
     if (isFlightBookingRequested) {
-      // Call the AFS API to create the flight booking.
-      let afsResponse;
-      try {
-        afsResponse = await callAfsBooking({
-          firstName,
-          lastName,
-          email,
-          passportNumber,
-          flightIds,
-        });
-      } catch (error) {
-        if (error.message.includes("No available seats")) {
-          return NextResponse.json(
-            { error: "Flight booking failed: No available seats on the selected flight." },
-            { status: 400 }
-          );
-        }
-        if (error.message.includes("AFS booking API error: 400") || error.message.includes("AFS booking API error: 404")) {
-          return NextResponse.json(
-            { error: "Flight booking failed due to invalid input." },
-            { status: 400 }
-          );
-        }
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-      }
       
       // Create a flight booking record in the FlightBooking table.
       flightBooking = await prisma.flightBooking.create({
         data: {
           userId,
-          flightBookingReference: afsResponse.bookingReference,
+          // flightBookingReference remains null; to be filled at checkout.
           flightIds, // assuming JSON support; otherwise, store as a string.
           firstName,
           lastName,
@@ -409,7 +422,7 @@ export async function POST(request) {
       await prisma.notification.create({
         data: {
           userId,
-          message: `Your flight reservation (Reference: ${afsResponse.bookingReference}) is currently pending. Complete the payment process to secure your seat(s).`
+          message: `Your flight reservation is currently pending. Complete the payment process to secure your seat(s).`
         },
       });
     }
@@ -421,25 +434,5 @@ export async function POST(request) {
   }
 }
 
-async function callAfsBooking(payload) {
-  const baseUrl = process.env.AFS_BASE_URL;
-  const apiKey = process.env.AFS_API_KEY;
-  if (!baseUrl || !apiKey) {
-    throw new Error("AFS API configuration is missing");
-  }
-  const url = new URL("/api/bookings", baseUrl);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`AFS booking API error: ${res.status} - ${errorText}`);
-  }
-  return res.json();
-}
+
 
