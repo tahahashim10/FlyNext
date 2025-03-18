@@ -94,7 +94,7 @@ model Booking {
 model FlightBooking {
   id                     Int          @id @default(autoincrement())
   userId                 Int
-  flightBookingReference String       // Reference from AFS
+  flightBookingReference String?       // Reference from AFS
   flightIds              Json?        // Store flight IDs as JSON
   firstName              String
   lastName               String
