@@ -1,10 +1,10 @@
 import prisma from "@/utils/db";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { hashPassword } from "@/utils/auth";
 
 // Note: this file is very similar to Exercise 6
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         const { firstName, lastName, email, password, phoneNumber, profilePicture, role } = await request.json();
 
@@ -86,7 +86,7 @@ export async function POST(request) {
             },
             { status: 201 }
         );
-    } catch (error) {
+    } catch (error: any) {
         console.error("Registration error:", error.stack);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
@@ -94,8 +94,8 @@ export async function POST(request) {
 
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string) {
+function isValidUrl(string: string): boolean {
     const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
     return urlRegex.test(string);
-}
+  }
   

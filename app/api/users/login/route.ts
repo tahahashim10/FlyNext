@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const SECRET_KEY = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET as string;
 
 // Note: this file is very similar to Exercise 6
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { email, password } = await request.json();
 
@@ -44,7 +44,7 @@ export async function POST(request) {
 
     return NextResponse.json({ accessToken, refreshToken }, { status: 200 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Login error:", error.stack);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 

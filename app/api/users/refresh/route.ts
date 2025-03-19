@@ -1,11 +1,11 @@
 // app/api/users/refresh/route.js
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken"; 
 
-const SECRET_KEY = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET as string;
 
 // copied logic from Exercise 6
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { refreshToken } = await request.json();
 
@@ -13,7 +13,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Refresh token is required" }, { status: 400 });
     }
 
-    let decoded;
+    let decoded: any;
     try {
       // Verify the refresh token using jwt.verify 
       decoded = jwt.verify(refreshToken, SECRET_KEY);
@@ -33,7 +33,7 @@ export async function POST(request) {
     );
 
     return NextResponse.json({ accessToken: newAccessToken }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Refresh token error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
