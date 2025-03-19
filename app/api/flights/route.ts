@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSearchParams } from "@/utils/query";
 import { addLayoverInfo, minimalFlightInfo  } from "@/utils/flightUtils";
 
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const { origin, destination, date, returnDate } = getSearchParams(request);
 
   if (!origin || !destination || !date) {
@@ -34,16 +34,19 @@ export async function GET(request) {
   }
 
   // Build URL for AFS API
-  const baseUrl = process.env.AFS_BASE_URL;
+  const baseUrl = process.env.AFS_BASE_URL as string;
   // Get API key
-  const apiKey = process.env.AFS_API_KEY;
+  const apiKey = process.env.AFS_API_KEY as string;
   if (!apiKey) {
     return NextResponse.json({ error: "AFS API key is not configured" }, { status: 500 });
   }
 
 
   // helper func to call the AFS API for flights (since we'll call it twice to handle one-way and round-trips flights)
-  async function callAfs(origin, destination, date) {
+  async function callAfs(origin: string,
+    destination: string,
+    date: string
+  ): Promise<any> {
     const url = new URL("/api/flights", baseUrl);
     url.search = new URLSearchParams({ origin, destination, date }).toString();
 
@@ -61,7 +64,7 @@ export async function GET(request) {
 
   try {
     // from origin to destination on the specified date
-    let flightThereTemp;
+    let flightThereTemp: any;
     try {
       flightThereTemp = await callAfs(origin, destination, date);
     } catch (error) {
@@ -78,9 +81,9 @@ export async function GET(request) {
     */
 
     // if returnDate exists then swap origin and destination
-    let flightBack = null;
+    let flightBack: any = null;
     if (returnDate) {
-        let flightBackTemp;
+        let flightBackTemp: any;
         try {
           flightBackTemp = await callAfs(destination, origin, returnDate);
         } catch (error) {
@@ -93,7 +96,7 @@ export async function GET(request) {
 
     return NextResponse.json({ flightThere, flightBack }, { status: 200 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error calling AFS API:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
