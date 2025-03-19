@@ -178,7 +178,7 @@ export async function DELETE(
 }
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string: string) {
+function isValidUrl(string: string): boolean {
   const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   return urlRegex.test(string);
 }

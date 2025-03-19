@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 import { verifyToken } from '@/utils/auth';
 
-export async function GET(request, { params }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   // Verify token
   const tokenData = verifyToken(request);
   if (!tokenData) {
@@ -11,7 +14,7 @@ export async function GET(request, { params }) {
 
   const { id } = params;
 
-  if (!id || isNaN(id)) {
+  if (!id || isNaN(Number(id))) {
     return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });
   }
 
@@ -32,12 +35,15 @@ export async function GET(request, { params }) {
     }
 
     return NextResponse.json(room, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   // Verify token
   const tokenData = verifyToken(request);
   if (!tokenData) {
@@ -46,7 +52,7 @@ export async function PUT(request, { params }) {
 
   const { id } = params;
 
-  if (!id || isNaN(id)) {
+  if (!id || isNaN(Number(id))) {
     return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });
   }
 
@@ -126,12 +132,15 @@ export async function PUT(request, { params }) {
     });
 
     return NextResponse.json(updatedRoom, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   // Verify token
   const tokenData = verifyToken(request);
   if (!tokenData) {
@@ -139,8 +148,8 @@ export async function DELETE(request, { params }) {
   }
 
   try {
-    const { id } = params;
-    if (!id || isNaN(id)) {
+    const { id } = await params;
+    if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });
     }
 
@@ -163,13 +172,13 @@ export async function DELETE(request, { params }) {
     });
 
     return NextResponse.json({ message: 'Room deleted successfully' }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string) {
+function isValidUrl(string: string): boolean {
   const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   return urlRegex.test(string);
 }
