@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-export async function generateInvoicePDF(booking) {
+export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   // Create a new PDF document.
   const pdfDoc = await PDFDocument.create();
   // Embed a standard font (Times Roman).
@@ -33,7 +33,7 @@ export async function generateInvoicePDF(booking) {
         const checkOutDate = new Date(booking.checkOut);
         // Calculate the number of nights.
         const msPerDay = 1000 * 60 * 60 * 24;
-        const days = Math.ceil((checkOutDate - checkInDate) / msPerDay);
+        const days = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / msPerDay);
         const totalPrice = days * booking.room.pricePerNight;
         invoiceText += `Total Price: $${totalPrice}\n`;
       }
@@ -47,7 +47,7 @@ export async function generateInvoicePDF(booking) {
     invoiceText += `Booking Reference: ${booking.flightBookingReference}\n`;
     // If additional flight details were fetched, print each flight's details.
     if (booking.flightDetails && Array.isArray(booking.flightDetails.flights)) {
-      booking.flightDetails.flights.forEach((flight, index) => {
+      booking.flightDetails.flights.forEach((flight: any, index: number) => {
         invoiceText += `\n--- Flight ${index + 1} ---\n`;
         if (flight.airline) {
           invoiceText += `Airline: ${flight.airline.name} (${flight.airline.code})\n`;

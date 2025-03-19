@@ -1,6 +1,6 @@
 import prisma from "@/utils/db";
 
-export async function getUserBookings(userId) {
+export async function getUserBookings(userId: number): Promise<any> {
   return await prisma.booking.findMany({
     where: { userId },
     include: {

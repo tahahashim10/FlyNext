@@ -1,4 +1,4 @@
-export async function geocodeAddress(address) {
+export async function geocodeAddress(address: string): Promise<{ lat: number | null; lng: number | null }> {
     const encodedAddress = encodeURIComponent(address);
     //Nominatim OpenStreetMap API, this is free
     // dont need an api key for Nominatim

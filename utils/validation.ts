@@ -1,5 +1,5 @@
 // Luhn Algorithm to validate credit card number
-export function isValidCardNumber(cardNumber) {
+export function isValidCardNumber(cardNumber: string): boolean {
     let sum = 0;
     let alternate = false;
     const digits = cardNumber.split('').reverse().map(Number);
@@ -17,7 +17,7 @@ export function isValidCardNumber(cardNumber) {
 }
 
 // Validate expiry date (should be in the future)
-export function isValidExpiry(month, year) {
+export function isValidExpiry(month: number, year: number): boolean {
     const now = new Date();
     const inputDate = new Date(year, month - 1, 1); // Month is 0-based in JS Dates
     return inputDate > now;
