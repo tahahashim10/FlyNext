@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { getSuggestedHotels, getSuggestedFlights } from "@/utils/suggestions";
 import { verifyToken } from "@/utils/auth";
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Verify token to ensure the user is authenticated.
   const tokenData = verifyToken(request);
@@ -19,7 +19,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Missing destination or hotelId" }, { status: 400 });
     }
 
-    let suggestions = {};
+    let suggestions: Record<string, any> = {};
 
     // If destination is provided, fetch hotel suggestions.
     if (destination) {
@@ -62,7 +62,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json(suggestions, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Suggestions Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { verifyToken } from "@/utils/auth";
 
 // Helper: Validate URL format.
-function isValidUrl(string) {
+function isValidUrl(string: string): boolean {
   const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   return urlRegex.test(string);
 }
 
-export async function PUT(request) {
+export async function PUT(request: NextRequest): Promise<NextResponse> {
   // Verify token from request headers.
   const tokenData = verifyToken(request);
   if (!tokenData) {
@@ -48,7 +48,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const dataClause = {};
+    const dataClause: { [key: string]: any } = {};
     if (firstName !== undefined) dataClause.firstName = firstName;
     if (lastName !== undefined) dataClause.lastName = lastName;
     if (phoneNumber !== undefined) dataClause.phoneNumber = phoneNumber;
@@ -60,7 +60,7 @@ export async function PUT(request) {
     });
 
     return NextResponse.json({ message: "Profile updated successfully", updatedUser }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Edit profile error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
