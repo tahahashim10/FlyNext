@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 import { verifyToken } from "@/utils/auth";
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Verify token and get authenticated user info
   const tokenData = verifyToken(request);
@@ -86,7 +86,7 @@ export async function POST(request) {
     });
 
     return NextResponse.json(room, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -103,7 +103,7 @@ export async function POST(request) {
 
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string) {
+function isValidUrl(string: string): boolean {
   const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   return urlRegex.test(string);
 }

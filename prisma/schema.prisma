@@ -88,7 +88,7 @@ model Booking {
 
   user       User    @relation(fields: [userId], references: [id])
   hotel      Hotel?  @relation(fields: [hotelId], references: [id])
-  room       Room?   @relation(fields: [roomId], references: [id])
+  room       Room?   @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 model FlightBooking {
