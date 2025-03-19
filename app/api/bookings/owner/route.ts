@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/utils/db';
 import { verifyToken } from '@/utils/auth';
 
 
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Verify the token and get the authenticated user's data
   const tokenData = verifyToken(request);
@@ -34,7 +34,7 @@ export async function GET(request) {
     const roomFilter = searchParams.get('room');
 
     // Validate date strings if provided
-    let startDate, endDate;
+    let startDate: Date | undefined, endDate: Date | undefined;
     if (startDateStr) {
       startDate = new Date(startDateStr);
       if (isNaN(startDate.getTime())) {
@@ -54,7 +54,7 @@ export async function GET(request) {
     }
 
     // Validate roomFilter if provided
-    let trimmedRoomFilter;
+    let trimmedRoomFilter: string | undefined;
     if (roomFilter !== null) {
       if (typeof roomFilter !== "string") {
         return NextResponse.json({ error: "Invalid room filter" }, { status: 400 });
@@ -63,16 +63,9 @@ export async function GET(request) {
     }    
 
     // Build filtering conditions for bookings.
-    const whereClause = {
-      hotelId: { in: ownerHotelIds },
-    }
-    if (startDate) {
-      whereClause.checkOut = { gte: new Date(startDate) };
-    }
-    if (endDate) {
-      whereClause.checkIn = { lte: new Date(endDate) };
-    }
-    
+    const whereClause: any = { hotelId: { in: ownerHotelIds } };
+    if (startDate) whereClause.checkOut = { gte: startDate };
+    if (endDate) whereClause.checkIn = { lte: endDate };
     if (trimmedRoomFilter && trimmedRoomFilter.length > 0) {
       whereClause.room = { name: { contains: trimmedRoomFilter } };
     }
@@ -86,7 +79,7 @@ export async function GET(request) {
     });
 
     return NextResponse.json(bookings, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

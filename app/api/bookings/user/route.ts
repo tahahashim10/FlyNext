@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/utils/db';
 import { getUserBookings } from "@/utils/bookings";
 import { verifyToken } from '@/utils/auth';
 
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const tokenData = verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,14 +14,14 @@ export async function GET(request) {
       where: { userId: tokenData.userId },
     });
     return NextResponse.json({ hotelBookings, flightBookings }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Fetch Bookings Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 // for U20
-export async function PATCH(request) {
+export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const tokenData = verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -46,7 +46,7 @@ export async function PATCH(request) {
 
     // Validate hotelBookingIds: must be an array of numbers.
     if (body.hotelBookingIds) {
-      if (!Array.isArray(body.hotelBookingIds) || !body.hotelBookingIds.every(item => !isNaN(Number(item)))) {
+      if (!Array.isArray(body.hotelBookingIds) || !body.hotelBookingIds.every((item: any) => !isNaN(Number(item)))) {
         return NextResponse.json(
           { error: "hotelBookingIds must be an array of numbers." },
           { status: 400 }
@@ -56,7 +56,7 @@ export async function PATCH(request) {
 
     // Validate flightBookingIds: must be an array of numbers.
     if (body.flightBookingIds) {
-      if (!Array.isArray(body.flightBookingIds) || !body.flightBookingIds.every(item => !isNaN(Number(item)))) {
+      if (!Array.isArray(body.flightBookingIds) || !body.flightBookingIds.every((item: any) => !isNaN(Number(item)))) {
         return NextResponse.json(
           { error: "flightBookingIds must be an array of numbers." },
           { status: 400 }
@@ -194,7 +194,7 @@ export async function PATCH(request) {
         return NextResponse.json({ error: "bookingType must be either 'hotel' or 'flight'." }, { status: 400 });
       }
       
-      let booking = null;
+      let booking: any = null;
       if (bookingType === "hotel") {
         booking = await prisma.booking.findUnique({ where: { id: bookingId } });
       } else {
@@ -219,7 +219,7 @@ export async function PATCH(request) {
         // For flight bookings, call the new AFS cancellation API first.
         try {
           await callAfsCancelBooking(booking);
-        } catch (error) {
+        } catch (error: any) {
           return NextResponse.json({ error: "Failed to cancel flight booking via AFS: " + error.message }, { status: 400 });
         }
 
@@ -238,7 +238,7 @@ export async function PATCH(request) {
     } else {
       return NextResponse.json({ error: "Invalid request. For single cancellation, provide both bookingId and bookingType; for bulk cancellation, provide hotelBookingIds and/or flightBookingIds." }, { status: 400 });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Cancel Bookings Error:", error.stack);
     if (error.code === "P2025") {
       return NextResponse.json({ error: "Booking not found." }, { status: 404 });
@@ -248,9 +248,9 @@ export async function PATCH(request) {
 }
 
 // Helper function for calling AFS cancellation API
-async function callAfsCancelBooking(booking) {
-  const baseUrl = process.env.AFS_BASE_URL;
-  const apiKey = process.env.AFS_API_KEY;
+async function callAfsCancelBooking(booking: { flightBookingReference: string | null; lastName: string; }): Promise<any> {
+  const baseUrl = process.env.AFS_BASE_URL as string;
+  const apiKey = process.env.AFS_API_KEY as string;
   if (!baseUrl || !apiKey) {
     throw new Error("AFS API configuration is missing.");
   }
@@ -279,7 +279,7 @@ async function callAfsCancelBooking(booking) {
 
 
 // for U15
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const tokenData = verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -299,7 +299,7 @@ export async function POST(request) {
       passportNumber
     } = await request.json();
 
-    const userId = tokenData.userId;
+    const userId: number = tokenData.userId;
 
     // Validate hotel booking inputs (if provided)
     if ((hotelId !== undefined || roomId !== undefined) && (hotelId === undefined || roomId === undefined)) {
@@ -428,7 +428,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json({ hotelBooking, flightBooking }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Booking Error:", error.stack);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }

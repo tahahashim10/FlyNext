@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { verifyToken } from "@/utils/auth";
 
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   
   // Verify token
   const tokenData = verifyToken(request);
@@ -22,8 +22,8 @@ export async function GET(request) {
 
 
     // Get the AFS configuration from the environment
-    const baseUrl = process.env.AFS_BASE_URL;
-    const apiKey = process.env.AFS_API_KEY;
+    const baseUrl = process.env.AFS_BASE_URL as string;
+    const apiKey = process.env.AFS_API_KEY as string;
     if (!baseUrl || !apiKey) {
       return NextResponse.json(
         { error: "AFS API configuration is missing" },
@@ -54,7 +54,7 @@ export async function GET(request) {
 
     const data = await res.json();
     return NextResponse.json(data, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Verify Flight Booking Error:", error);
     return NextResponse.json(
       { error: error.message || "Internal Server Error" },
