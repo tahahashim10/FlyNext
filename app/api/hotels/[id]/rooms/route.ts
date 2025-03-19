@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { getSearchParams } from "@/utils/query";
 
 // don't add verification token because this user story is for visitors (U14)
-export async function GET(request, { params }) {
+export async function GET(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ): Promise<NextResponse> {
     const { id } = await params; 
     if (!id || isNaN(Number(id))) {
         return NextResponse.json({ error: "Valid Hotel ID is required" }, { status: 400 });
@@ -60,7 +63,7 @@ export async function GET(request, { params }) {
         });
 
         return NextResponse.json({ results }, { status: 200 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error retrieving room availability:", error);
         return NextResponse.json(
         { error: "Internal Server Error" },

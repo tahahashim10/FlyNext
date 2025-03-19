@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/utils/db';
 import { verifyToken } from "@/utils/auth";
 
@@ -7,7 +7,7 @@ import { verifyToken } from "@/utils/auth";
  * GET /api/hotels/availability?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&roomId=number
  * Returns room availability details (per room type) for the specified date range.
  */
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Verify that the request is authenticated.
   const tokenData = verifyToken(request);
@@ -94,7 +94,7 @@ export async function GET(request) {
       bookingsCount: bookings.length,
       availableRooms: availableRooms >= 0 ? availableRooms : 0,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching room availability:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
