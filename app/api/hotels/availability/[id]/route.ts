@@ -1,9 +1,12 @@
 // app/api/hotels/availability/id/route.js
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/utils/db';
 import { verifyToken } from '@/utils/auth';
 
-export async function POST(request, { params }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
 
   // Verify token
   const tokenData = verifyToken(request);
@@ -39,7 +42,7 @@ export async function POST(request, { params }) {
     }
 
     const oldAvailable = room.availableRooms;
-    let canceledBookings = [];
+    let canceledBookings: any[] = [];
 
     if (newAvailable < oldAvailable) {
       // Find confirmed bookings for this room (order by checkIn descending to cancel the latest ones first)
@@ -82,7 +85,7 @@ export async function POST(request, { params }) {
     });
 
     return NextResponse.json({ room: updatedRoom, canceledBookings }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

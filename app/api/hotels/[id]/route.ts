@@ -1,10 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { geocodeAddress } from "@/utils/geocode";
 import { verifyToken } from '@/utils/auth';
 
 // don't add verification token because this user story is for visitors (U13)
-export async function GET(request, { params }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
     const { id } = await params;
     // Validate that an id is provided and that it is a valid number
     if (!id || isNaN(Number(id))) {
@@ -53,13 +56,16 @@ export async function GET(request, { params }) {
 
         return NextResponse.json(data, { status: 200 });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error retrieving hotel details:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
 
   // Verify the token first
   const tokenData = verifyToken(request);
@@ -125,12 +131,15 @@ export async function PUT(request, { params }) {
     });
 
     return NextResponse.json(updatedHotel, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+): Promise<NextResponse> {
   
   // Verify the token first
   const tokenData = verifyToken(request);
@@ -163,13 +172,13 @@ export async function DELETE(request, { params }) {
     });
 
     return NextResponse.json({ message: 'Hotel deleted successfully' }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string) {
+function isValidUrl(string: string) {
   const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
   return urlRegex.test(string);
 }

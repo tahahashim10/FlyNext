@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { getSearchParams } from "@/utils/query";
 import { geocodeAddress } from "@/utils/geocode";
 import { verifyToken } from "@/utils/auth";
 
 // don't add verification token since this user story is for visitors (U12)
-export async function GET(request) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
     const { checkIn, checkOut, city, name, starRating, minPrice, maxPrice } = getSearchParams(request);
 
     if (!checkIn || !checkOut || !city) {
@@ -43,7 +43,7 @@ export async function GET(request) {
     // From Exercise 4
     // We build whereClause conditionally so only provided parameters become filters
     // This way, missing parameters do not restrict the query
-    const whereClause = {};
+    const whereClause: any = {};
     if (city) whereClause.location = { contains: city }; 
     if (name) whereClause.name = { contains: name };
     if (starRating) whereClause.starRating = Number(starRating);
@@ -127,7 +127,7 @@ export async function GET(request) {
 
         return NextResponse.json({ results }, { status: 200 });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error retrieving hotels:", error.stack);
         // return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 
@@ -135,7 +135,7 @@ export async function GET(request) {
     }
 }
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Verify that the user is authenticated
   const tokenData = verifyToken(request);
@@ -193,14 +193,14 @@ export async function POST(request) {
     });
 
     return NextResponse.json(hotel, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating hotel:', error.stack);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-function isValidUrl(string) {
+function isValidUrl(string: string): boolean {
     const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
     return urlRegex.test(string);
 }
