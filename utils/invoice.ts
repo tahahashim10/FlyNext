@@ -1,6 +1,6 @@
 import prisma from "@/utils/db";
 
-export async function getBookingDetails(bookingId, bookingType) {
+export async function getBookingDetails(bookingId: number, bookingType: string): Promise<any> {
   if (bookingType === "hotel") {
     return await prisma.booking.findUnique({
       where: { id: Number(bookingId) },

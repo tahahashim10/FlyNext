@@ -1,6 +1,6 @@
 import prisma from "@/utils/db";
 
-export async function getSuggestedHotels(city) {
+export async function getSuggestedHotels(city: string): Promise<any[]> {
   return await prisma.hotel.findMany({
     where: { location: city },
     select: {
@@ -15,9 +15,13 @@ export async function getSuggestedHotels(city) {
 }
 
 //accepts an optional suggestedDate parameter.
-export async function getSuggestedFlights(destinationCity, departureCity = "Toronto", suggestedDate) { // * note: default departureCity is Toronto
-  const baseUrl = process.env.AFS_BASE_URL;
-  const apiKey = process.env.AFS_API_KEY;
+export async function getSuggestedFlights(
+  destinationCity: string,
+  departureCity: string = "Toronto",
+  suggestedDate?: string
+): Promise<any[]> { // * note: default departureCity is Toronto
+  const baseUrl = process.env.AFS_BASE_URL as string;
+  const apiKey = process.env.AFS_API_KEY as string;
   if (!baseUrl || !apiKey) {
     throw new Error("AFS API configuration is missing");
   }
@@ -46,11 +50,11 @@ export async function getSuggestedFlights(destinationCity, departureCity = "Toro
       return [];
     }
     const data = await res.json();
-    let flights = [];
+    let flights: any[] = [];
     if (data.results && Array.isArray(data.results)) {
-      flights = data.results.flatMap(group => group.flights);
+      flights = data.results.flatMap((group: any) => group.flights);
     }
-    return flights.slice(0, 5).map(flight => ({
+    return flights.slice(0, 5).map((flight: any) => ({
       id: flight.id,
       airline: flight.airline,
       departureTime: flight.departureTime,
