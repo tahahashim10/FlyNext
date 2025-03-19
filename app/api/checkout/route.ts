@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/utils/db';
 import { isValidCardNumber, isValidExpiry } from '@/utils/validation';
 import { verifyToken } from '@/utils/auth';
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const tokenData = verifyToken(request);
   if (!tokenData) {
-    return NextResponse.json({ error: "Unauthorized: No valid token provided." }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -30,13 +30,13 @@ export async function POST(request) {
     }
 
     // Validate bookingType value.
-    const bookingType = payload.bookingType;
+    const bookingType: string = payload.bookingType;
     if (!["hotel", "flight"].includes(bookingType)) {
       return NextResponse.json({ error: "bookingType must be either 'hotel' or 'flight'." }, { status: 400 });
     }
 
     // Validate bookingId is a number.
-    const parsedBookingId = Number(payload.bookingId);
+    const parsedBookingId: number = Number(payload.bookingId);
     if (isNaN(parsedBookingId)) {
       return NextResponse.json({ error: "bookingId must be a number." }, { status: 400 });
     }
@@ -57,7 +57,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid credit card number." }, { status: 400 });
     }
 
-    let booking = null;
+    let booking: any = null;
     if (bookingType === "hotel") {
       booking = await prisma.booking.findUnique({
         where: { id: parsedBookingId },
@@ -91,7 +91,7 @@ export async function POST(request) {
       });
     } else {
       // For flight bookings, call AFS booking API at checkout.
-      let afsResponse;
+      let afsResponse: any;
       try {
         afsResponse = await callAfsBooking({
           firstName: booking.firstName,
@@ -100,7 +100,7 @@ export async function POST(request) {
           passportNumber: booking.passportNumber,
           flightIds: booking.flightIds,
         });
-      } catch (error) {
+      } catch (error: any) {
         return NextResponse.json({ error: "AFS booking failed: " + error.message }, { status: 400 });
       }
 
@@ -125,15 +125,21 @@ export async function POST(request) {
     });
 
     return NextResponse.json({ message: "Booking confirmed", booking }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Checkout Error:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-async function callAfsBooking(payload) {
-  const baseUrl = process.env.AFS_BASE_URL;
-  const apiKey = process.env.AFS_API_KEY;
+async function callAfsBooking(payload: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  passportNumber: string;
+  flightIds: any;
+}): Promise<any> {
+  const baseUrl = process.env.AFS_BASE_URL as string;
+  const apiKey = process.env.AFS_API_KEY as string;
   if (!baseUrl || !apiKey) {
     throw new Error("AFS API configuration is missing");
   }
