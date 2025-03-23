@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Workaround for default icon issue in Next.js with Leaflet
+// Fix default icon path
 delete (L.Icon.Default as any)._getIconUrl;
 (L.Icon.Default as any).mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
@@ -19,15 +19,19 @@ interface OSMMapProps {
 }
 
 const OSMMap: React.FC<OSMMapProps> = ({ lat, lng }) => {
-  const position: [number, number] = [lat, lng];
   return (
-    <MapContainer center={position} zoom={15} style={{ height: '300px', width: '100%' }}>
+    <MapContainer
+      center={[lat, lng]}
+      zoom={15}
+      style={{ width: '100%', height: '100%' }}
+      scrollWheelZoom={false}
+    >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={position}>
-        <Popup>Here is the hotel location</Popup>
+      <Marker position={[lat, lng]}>
+        <Popup>Hotel Location</Popup>
       </Marker>
     </MapContainer>
   );

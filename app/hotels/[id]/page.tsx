@@ -71,14 +71,16 @@ export default function HotelDetailPage() {
           <p>{hotel.address}</p>
           <p>Location: {hotel.location}</p>
           <p>Star Rating: {hotel.starRating}</p>
-          {/* Map Embed */}
+
+          {/* Map container with fixed size */}
           {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
-            <div className="mt-4">
+            <div className="mt-4 w-full h-64 overflow-hidden">
               <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
             </div>
           ) : (
             <p>No map available.</p>
           )}
+
           <div className="mt-4">
             <Link href={`/hotels/${hotel.id}/rooms`}>
               <button className="btn btn-primary">Check Room Availability</button>
@@ -87,6 +89,7 @@ export default function HotelDetailPage() {
         </div>
       </div>
 
+      {/* Gallery */}
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
         <div className="flex space-x-4 overflow-x-auto">
@@ -101,6 +104,7 @@ export default function HotelDetailPage() {
         </div>
       </div>
 
+      {/* Room Types & Amenities */}
       <div className="mt-8">
         <h2 className="text-2xl font-semibold">Room Types & Amenities</h2>
         {hotel.rooms.length > 0 ? (
