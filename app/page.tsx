@@ -1,37 +1,52 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import FlightSearchForm from '../components/FlightSearchForm';
-// import HotelSearchForm from '../components/HotelSearchForm'; // implement later
+import HotelSearchForm from '../components/HotelSearchForm';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights');
 
   return (
-    <div className="min-h-screen p-4">
-      <h1 className="text-5xl font-bold text-center mb-8">
-        Welcome to FlyNext!
-      </h1>
-      <div className="tabs justify-center mb-8">
-        <button
-          className={`tab tab-lifted ${activeTab === 'flights' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('flights')}
-        >
-          Flights
-        </button>
-        <button
-          className={`tab tab-lifted ${activeTab === 'hotels' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('hotels')}
-        >
-          Hotels
-        </button>
+    <div className="min-h-screen bg-gray-50 flex justify-center items-start pt-10">
+      <div className="bg-white shadow-lg rounded-lg p-4 w-full max-w-4xl">
+        {/* Tab Buttons */}
+        <div className="flex border-b mb-4">
+          <button
+            className={`px-6 py-3 text-sm font-medium focus:outline-none ${
+              activeTab === 'flights'
+                ? 'border-b-2 border-blue-500 text-blue-500'
+                : 'text-gray-600'
+            }`}
+            onClick={() => setActiveTab('flights')}
+          >
+            Flights
+          </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium focus:outline-none ${
+              activeTab === 'hotels'
+                ? 'border-b-2 border-blue-500 text-blue-500'
+                : 'text-gray-600'
+            }`}
+            onClick={() => setActiveTab('hotels')}
+          >
+            Hotels
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'flights' ? (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Search Flights</h2>
+            <FlightSearchForm />
+          </div>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Search Hotels</h2>
+            <HotelSearchForm />
+          </div>
+        )}
       </div>
-      {activeTab === 'flights' ? (
-        <FlightSearchForm />
-      ) : (
-        <p>Hotel search coming soon...</p>
-      )}
     </div>
   );
 }
