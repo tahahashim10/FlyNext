@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import OSMMap from './OSMMap';
 
 interface Hotel {
   id: number;
@@ -21,14 +22,42 @@ interface SearchResults {
   results: Hotel[];
 }
 
-const HotelSearchForm: React.FC = () => {
-  const [city, setCity] = useState('');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [nameFilter, setNameFilter] = useState('');
-  const [starRating, setStarRating] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+interface HotelSearchFormProps {
+  initialCity?: string;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
+  initialName?: string;
+  initialStarRating?: string;
+  initialMinPrice?: string;
+  initialMaxPrice?: string;
+  onSearch?: (
+    city: string,
+    checkIn: string,
+    checkOut: string,
+    name?: string,
+    starRating?: string,
+    minPrice?: string,
+    maxPrice?: string
+  ) => void;
+}
+
+const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
+  initialCity = '',
+  initialCheckIn = '',
+  initialCheckOut = '',
+  initialName = '',
+  initialStarRating = '',
+  initialMinPrice = '',
+  initialMaxPrice = '',
+  onSearch,
+}) => {
+  const [city, setCity] = useState(initialCity);
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
+  const [nameFilter, setNameFilter] = useState(initialName);
+  const [starRating, setStarRating] = useState(initialStarRating);
+  const [minPrice, setMinPrice] = useState(initialMinPrice);
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
   const [results, setResults] = useState<SearchResults | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +79,10 @@ const HotelSearchForm: React.FC = () => {
     if (starRating) params.append('starRating', starRating);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
+
+    if (onSearch) {
+      onSearch(city, checkIn, checkOut, nameFilter, starRating, minPrice, maxPrice);
+    }
 
     try {
       const res = await fetch(`/api/hotels?${params.toString()}`);
@@ -127,7 +160,9 @@ const HotelSearchForm: React.FC = () => {
           </div>
         </div>
         {error && <div className="text-red-500">{error}</div>}
-        <button type="submit" className="btn btn-primary">Search Hotels</button>
+        <button type="submit" className="btn btn-primary">
+          Search Hotels
+        </button>
       </form>
       {results && (
         <div className="p-4">
@@ -135,26 +170,22 @@ const HotelSearchForm: React.FC = () => {
           {results.results.length > 0 ? (
             <div className="space-y-4">
               {results.results.map((hotel) => (
-                <div key={hotel.id} className="border p-4 rounded flex flex-col md:flex-row items-center">
-                  <img
-                    src={hotel.logo || '/default-hotel.png'}
-                    alt={hotel.name}
-                    className="w-24 h-24 object-cover rounded mr-4"
-                  />
+                <div key={hotel.id} className="border p-4 rounded flex flex-col md:flex-row items-center gap-4">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold">{hotel.name}</h3>
                     <p>{hotel.address}</p>
                     <p>Star Rating: {hotel.starRating}</p>
                     <p>Starting Price: {hotel.startingPrice}</p>
+                    <p>Location: {hotel.location}</p>
+                  </div>
+                  <div className="relative w-48 h-32 overflow-hidden">
                     {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
-                      <p>
-                        Location: ({hotel.coordinates.lat.toFixed(2)},{' '}
-                        {hotel.coordinates.lng.toFixed(2)})
-                      </p>
+                      <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
                     ) : (
-                      <p>No map data</p>
+                      <p>No map available.</p>
                     )}
                   </div>
+
                   <div>
                     <Link href={`/hotels/${hotel.id}`}>
                       <button className="btn btn-secondary">View Details</button>
