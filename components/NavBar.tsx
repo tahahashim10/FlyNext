@@ -1,17 +1,18 @@
-// components/NavBar.tsx
 'use client';
+
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
-  console.log('NavBar user:', user); // Debug log
 
   return (
     <nav className="navbar bg-base-100 shadow-md px-4">
       <div className="flex-1">
-        <Link href="/" className="btn btn-ghost normal-case text-xl">FlyNext</Link>
+        <Link href="/" className="btn btn-ghost normal-case text-xl">
+          FlyNext
+        </Link>
       </div>
       <div className="flex-none">
         {user ? (
@@ -21,7 +22,10 @@ const NavBar: React.FC = () => {
                 <img src={user.profilePicture || '/default-profile.png'} alt="Profile" />
               </div>
             </label>
-            <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+            <ul
+              tabIndex={0}
+              className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
+            >
               <li>
                 <Link href="/profile">Profile</Link>
               </li>
@@ -32,8 +36,12 @@ const NavBar: React.FC = () => {
           </div>
         ) : (
           <>
-            <Link href="/login" className="btn btn-ghost">Login</Link>
-            <Link href="/signup" className="btn btn-ghost">Sign Up</Link>
+            <Link href="/login" className="btn btn-ghost">
+              Login
+            </Link>
+            <Link href="/signup" className="btn btn-ghost">
+              Sign Up
+            </Link>
           </>
         )}
       </div>
