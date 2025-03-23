@@ -1,15 +1,32 @@
+'use server';
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/db";
 import { verifyToken } from "@/utils/auth";
 
-// Helper: Validate URL format.
-function isValidUrl(string: string): boolean {
-  const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
-  return urlRegex.test(string);
+// GET: Retrieve the current user's profile
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const tokenData = verifyToken(request);
+  if (!tokenData) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: tokenData.userId },
+      // Optionally, select specific fields if needed
+    });
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+    return NextResponse.json(user, { status: 200 });
+  } catch (error: any) {
+    console.error("Error fetching user profile:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
 
+// PUT: Update the current user's profile
 export async function PUT(request: NextRequest): Promise<NextResponse> {
-  // Verify token from request headers.
   const tokenData = verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized: No valid token provided." }, { status: 401 });
@@ -17,6 +34,12 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
   try {
     const { firstName, lastName, phoneNumber, profilePicture } = await request.json();
+
+    // Helper: Validate URL format.
+    function isValidUrl(string: string): boolean {
+      const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
+      return urlRegex.test(string);
+    }
 
     // Validate inputs.
     if (firstName !== undefined && (typeof firstName !== "string" || firstName.trim() === "")) {
