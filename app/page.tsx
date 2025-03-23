@@ -1,32 +1,36 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '../context/AuthContext';
+import FlightSearchForm from '../components/FlightSearchForm';
+// import HotelSearchForm from '../components/HotelSearchForm'; // implement later
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights');
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center space-y-8">
-      <h1 className="text-5xl font-bold">Welcome to FlyNext!</h1>
-      <p className="text-lg">
-        Your most reliable travel companion. Book flights and hotels with ease!
-      </p>
-      {user ? (
-        // If the user is logged in, show a Dashboard link or a welcome message.
-        <div className="space-x-4">
-          
-        </div>
+    <div className="min-h-screen p-4">
+      <h1 className="text-5xl font-bold text-center mb-8">
+        Welcome to FlyNext!
+      </h1>
+      <div className="tabs justify-center mb-8">
+        <button
+          className={`tab tab-lifted ${activeTab === 'flights' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('flights')}
+        >
+          Flights
+        </button>
+        <button
+          className={`tab tab-lifted ${activeTab === 'hotels' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('hotels')}
+        >
+          Hotels
+        </button>
+      </div>
+      {activeTab === 'flights' ? (
+        <FlightSearchForm />
       ) : (
-        // If no user is logged in, show Login and Sign Up links.
-        <div className="space-x-4">
-          <Link href="/login">
-            <button className="btn btn-primary">Login</button>
-          </Link>
-          <Link href="/signup">
-            <button className="btn btn-secondary">Sign Up</button>
-          </Link>
-        </div>
+        <p>Hotel search coming soon...</p>
       )}
     </div>
   );
