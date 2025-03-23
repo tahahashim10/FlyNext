@@ -1,46 +1,48 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-interface RoomAvailability {
-  room: {
-    id: number;
-    name: string;
-    totalRooms: number;
-  };
-  dateRange: {
-    startDate: string;
-    endDate: string;
-  };
-  bookingsCount: number;
-  availableRooms: number;
+interface RoomType {
+  id: number;
+  name: string;
+  remainingRooms: number;
+  totalAvailableRooms: number;
+  pricePerNight: number;
+  amenities: string[];
 }
 
 export default function RoomAvailabilityPage() {
   const params = useParams();
-  const hotelId = params?.id;
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [availability, setAvailability] = useState<RoomAvailability | null>(null);
+  const hotelId = params?.id; // hotel id from URL
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [rooms, setRooms] = useState<RoomType[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // For demonstration, assume a fixed roomId; ideally, you'd let the user select a room type.
-  const roomId = 1;
-
   const fetchAvailability = async () => {
-    if (!startDate || !endDate) return;
+    if (!checkIn || !checkOut || !hotelId) return;
     try {
-      // Use correct query parameter names: startDate, endDate, and roomId.
-      const res = await fetch(
-        `/api/hotels/availability?startDate=${startDate}&endDate=${endDate}&roomId=${roomId}`
-      );
+      // Using the route: /api/hotels/{id}/rooms?checkIn=...&checkOut=...
+      const res = await fetch(`/api/hotels/${hotelId}/rooms?checkIn=${checkIn}&checkOut=${checkOut}`);
       if (!res.ok) {
         const err = await res.json();
         setError(err.error || 'Error fetching availability');
       } else {
         const data = await res.json();
-        setAvailability(data);
+        console.log('Fetched availability data:', data); // Debug log
+
+        // If data is an array, use it directly.
+        if (Array.isArray(data)) {
+          setRooms(data);
+        }
+        // If data.results exists and is an array, use that.
+        else if (data.results && Array.isArray(data.results)) {
+          setRooms(data.results);
+        }
+        else {
+          setError('Unexpected response format');
+        }
       }
     } catch (err: any) {
       setError('Error fetching availability');
@@ -50,7 +52,7 @@ export default function RoomAvailabilityPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setAvailability(null);
+    setRooms([]);
     await fetchAvailability();
   };
 
@@ -58,13 +60,13 @@ export default function RoomAvailabilityPage() {
     <div className="min-h-screen p-4 max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Room Availability</h2>
       <form onSubmit={handleSubmit} className="space-y-4 mb-4">
-        <div className="flex space-x-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <label className="label">Check-in</label>
             <input
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
               className="input input-bordered w-full"
               required
             />
@@ -73,8 +75,8 @@ export default function RoomAvailabilityPage() {
             <label className="label">Check-out</label>
             <input
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
               className="input input-bordered w-full"
               required
             />
@@ -85,18 +87,23 @@ export default function RoomAvailabilityPage() {
         </button>
       </form>
       {error && <div className="text-red-500">{error}</div>}
-      {availability && (
+      {rooms.length > 0 ? (
         <div className="border p-4 rounded">
-          <h3 className="text-xl font-bold">Room: {availability.room.name}</h3>
-          <p>
-            Total Rooms: {availability.room.totalRooms} | Booked:{' '}
-            {availability.bookingsCount} | Available: {availability.availableRooms}
-          </p>
-          <p>
-            Date Range: {availability.dateRange.startDate} to{' '}
-            {availability.dateRange.endDate}
-          </p>
+          {rooms.map((room) => (
+            <div key={room.id} className="mb-4">
+              <h3 className="text-xl font-bold">Room: {room.name}</h3>
+              <p>Price Per Night: {room.pricePerNight || 'N/A'}</p>
+              <p>
+                Total Rooms: {room.totalAvailableRooms || 'N/A'} | Available: {room.remainingRooms || 'N/A'}
+              </p>
+              <p>
+                Amenities: {room.amenities && room.amenities.length > 0 ? room.amenities.join(', ') : 'None'}
+              </p>
+            </div>
+          ))}
         </div>
+      ) : (
+        <p>No rooms found.</p>
       )}
     </div>
   );
