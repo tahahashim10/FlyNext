@@ -1,11 +1,12 @@
+// components/NavBar.tsx
 'use client';
-
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
+  console.log('NavBar user:', user); // Debug log
 
   return (
     <nav className="navbar bg-base-100 shadow-md px-4">

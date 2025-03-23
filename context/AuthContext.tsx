@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Load token and user from localStorage on initial load
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser && storedUser !== "undefined") {
@@ -45,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
       }
     }
-  }, []);  
+  }, []);
 
   const login = async (email: string, password: string) => {
     const res = await fetch('/api/users/login', {
@@ -58,11 +59,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(error.error || 'Login failed');
     }
     const data = await res.json();
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-  };
+    setToken(data.accessToken);
+    localStorage.setItem('token', data.accessToken);
+  
+    // Now fetch the user profile using the GET method
+    const profileRes = await fetch('/api/users/profile', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${data.accessToken}`,
+      },
+    });
+    if (!profileRes.ok) {
+      const error = await profileRes.text();
+      throw new Error(`Failed to fetch profile: ${error}`);
+    }
+    const userData = await profileRes.json();
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };  
 
   const logout = () => {
     setToken(null);
