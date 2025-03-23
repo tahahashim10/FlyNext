@@ -20,19 +20,20 @@ interface RoomAvailability {
 export default function RoomAvailabilityPage() {
   const params = useParams();
   const hotelId = params?.id;
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [availability, setAvailability] = useState<RoomAvailability | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // For demonstration, assume a fixed roomId; ideally, you'd allow the user to select a room type.
+  // For demonstration, assume a fixed roomId; ideally, you'd let the user select a room type.
   const roomId = 1;
 
   const fetchAvailability = async () => {
-    if (!checkIn || !checkOut || !hotelId) return;
+    if (!startDate || !endDate) return;
     try {
+      // Use correct query parameter names: startDate, endDate, and roomId.
       const res = await fetch(
-        `/api/hotels/availability/${roomId}?checkIn=${checkIn}&checkOut=${checkOut}`
+        `/api/hotels/availability?startDate=${startDate}&endDate=${endDate}&roomId=${roomId}`
       );
       if (!res.ok) {
         const err = await res.json();
@@ -62,8 +63,8 @@ export default function RoomAvailabilityPage() {
             <label className="label">Check-in</label>
             <input
               type="date"
-              value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className="input input-bordered w-full"
               required
             />
@@ -72,8 +73,8 @@ export default function RoomAvailabilityPage() {
             <label className="label">Check-out</label>
             <input
               type="date"
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               className="input input-bordered w-full"
               required
             />
