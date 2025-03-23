@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 interface User {
@@ -32,14 +34,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load token and user from localStorage on initial load
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
+    if (storedToken && storedUser && storedUser !== "undefined") {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        setUser(null);
+      }
     }
-  }, []);
+  }, []);  
 
   const login = async (email: string, password: string) => {
     const res = await fetch('/api/users/login', {
@@ -82,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const error = await res.json();
       throw new Error(error.error || 'Registration failed');
     }
-    // Optionally auto-login after successful registration:
+    // Optionally auto-login after registration:
     await login(userData.email, userData.password);
   };
 
