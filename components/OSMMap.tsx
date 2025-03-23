@@ -5,17 +5,13 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix default icon issues in Leaflet (Next.js may need this workaround)
-if ((L.Icon.Default as any)._getIconUrl) {
-    delete (L.Icon.Default as any)._getIconUrl;
-  }
-  
-  (L.Icon.Default as any).mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-  });
-  
+// Workaround for default icon issue in Next.js with Leaflet
+delete (L.Icon.Default as any)._getIconUrl;
+(L.Icon.Default as any).mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+});
 
 interface OSMMapProps {
   lat: number;
@@ -31,7 +27,7 @@ const OSMMap: React.FC<OSMMapProps> = ({ lat, lng }) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <Marker position={position}>
-        <Popup>Selected Location</Popup>
+        <Popup>Here is the hotel location</Popup>
       </Marker>
     </MapContainer>
   );

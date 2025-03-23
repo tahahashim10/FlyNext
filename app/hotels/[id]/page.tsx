@@ -60,23 +60,24 @@ export default function HotelDetailPage() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row gap-4">
         <img
           src={hotel.logo || '/default-hotel.png'}
           alt={hotel.name}
           className="w-full md:w-1/3 object-cover rounded"
         />
-        <div className="md:ml-4 flex-1">
+        <div className="flex-1">
           <h1 className="text-3xl font-bold">{hotel.name}</h1>
           <p>{hotel.address}</p>
           <p>Location: {hotel.location}</p>
           <p>Star Rating: {hotel.starRating}</p>
+          {/* Map Embed */}
           {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
             <div className="mt-4">
               <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
             </div>
           ) : (
-            <p>No map data available.</p>
+            <p>No map available.</p>
           )}
           <div className="mt-4">
             <Link href={`/hotels/${hotel.id}/rooms`}>
@@ -85,7 +86,48 @@ export default function HotelDetailPage() {
           </div>
         </div>
       </div>
-      {/* Gallery and room details as before */}
+
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
+        <div className="flex space-x-4 overflow-x-auto">
+          {hotel.images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`${hotel.name} ${idx + 1}`}
+              className="w-48 h-32 object-cover rounded"
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold">Room Types & Amenities</h2>
+        {hotel.rooms.length > 0 ? (
+          <div className="space-y-4">
+            {hotel.rooms.map((room) => (
+              <div key={room.id} className="border p-4 rounded">
+                <h3 className="text-xl font-bold">{room.type}</h3>
+                <p>Price Per Night: {room.pricePerNight}</p>
+                <p>Available Rooms: {room.availableRooms}</p>
+                <p>Amenities: {room.amenities.join(', ')}</p>
+                <div className="flex space-x-2 mt-2">
+                  {room.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`${room.type} ${idx + 1}`}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>No room types available.</p>
+        )}
+      </div>
     </div>
   );
 }
