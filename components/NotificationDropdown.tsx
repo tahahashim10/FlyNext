@@ -51,7 +51,12 @@ const NotificationDropdown: React.FC = () => {
       if (!res.ok) {
         console.error('Failed to mark notification as read');
       } else {
-        setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+        // Optionally update the local state to mark this notification as read
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === id ? { ...notif, read: true } : notif
+          )
+        );
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -79,9 +84,9 @@ const NotificationDropdown: React.FC = () => {
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
             />
           </svg>
-          {notifications.length > 0 && (
+          {notifications.filter((n) => !n.read).length > 0 && (
             <span className="badge badge-xs badge-secondary indicator-item">
-              {notifications.length}
+              {notifications.filter((n) => !n.read).length}
             </span>
           )}
         </div>
@@ -91,16 +96,18 @@ const NotificationDropdown: React.FC = () => {
           <div className="p-4">
             <h3 className="font-bold text-lg mb-2">Notifications</h3>
             {notifications.length === 0 ? (
-              <p className="text-sm">No unread notifications.</p>
+              <p className="text-sm">No notifications.</p>
             ) : (
               <ul className="space-y-2">
                 {notifications.map((notif) => (
                   <li
                     key={notif.id}
-                    className="p-2 border rounded cursor-pointer hover:bg-gray-100"
+                    className={`p-2 border rounded cursor-pointer hover:bg-gray-100 ${
+                      !notif.read ? 'bg-blue-100 font-bold' : 'bg-white'
+                    }`}
                     onClick={() => markAsRead(notif.id)}
                   >
-                    <p className="text-sm font-semibold">{notif.message}</p>
+                    <p className="text-sm">{notif.message}</p>
                     <p className="text-xs text-gray-500">
                       {new Date(notif.createdAt).toLocaleString()}
                     </p>
