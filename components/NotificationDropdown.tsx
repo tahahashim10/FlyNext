@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 interface Notification {
   id: number;
@@ -12,11 +13,16 @@ interface Notification {
 const NotificationDropdown: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { token } = useAuth();
 
-  // Fetch unread notifications
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications'); // Returns unread notifications
+      const res = await fetch('/api/notifications', {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
       if (!res.ok) {
         console.error('Failed to fetch notifications');
         return;
@@ -30,20 +36,21 @@ const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [token]);
 
-  // Mark a notification as read
   const markAsRead = async (id: number) => {
     try {
       const res = await fetch('/api/notifications', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ notificationId: id }),
       });
       if (!res.ok) {
         console.error('Failed to mark notification as read');
       } else {
-        // Remove this notification from the list
         setNotifications((prev) => prev.filter((notif) => notif.id !== id));
       }
     } catch (error) {
@@ -80,7 +87,7 @@ const NotificationDropdown: React.FC = () => {
         </div>
       </button>
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg z-50">
+        <div className="absolute right-0 mt-3 w-80 bg-white shadow-lg rounded-lg z-50">
           <div className="p-4">
             <h3 className="font-bold text-lg mb-2">Notifications</h3>
             {notifications.length === 0 ? (

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
+import NotificationDropdown from './NotificationDropdown';
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -14,26 +15,29 @@ const NavBar: React.FC = () => {
           FlyNext
         </Link>
       </div>
-      <div className="flex-none">
+      <div className="flex-none space-x-4">
         {user ? (
-          <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                <img src={user.profilePicture || '/default-profile.png'} alt="Profile" />
-              </div>
-            </label>
-            <ul
-              tabIndex={0}
-              className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <Link href="/profile">Profile</Link>
-              </li>
-              <li>
-                <button onClick={logout}>Logout</button>
-              </li>
-            </ul>
-          </div>
+          <>
+            <NotificationDropdown />
+            <div className="dropdown dropdown-end">
+              <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+                <div className="w-10 rounded-full">
+                  <img src={user.profilePicture || '/default-profile.png'} alt="Profile" />
+                </div>
+              </label>
+              <ul
+                tabIndex={0}
+                className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
+              >
+                <li>
+                  <Link href="/profile">Profile</Link>
+                </li>
+                <li>
+                  <button onClick={logout}>Logout</button>
+                </li>
+              </ul>
+            </div>
+          </>
         ) : (
           <>
             <Link href="/login" className="btn btn-ghost">
