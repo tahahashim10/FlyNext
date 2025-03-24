@@ -6,7 +6,7 @@ import { FlightBooking } from "@prisma/client";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

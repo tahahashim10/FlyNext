@@ -4,7 +4,7 @@ import { verifyToken } from "@/utils/auth";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   
   // Verify token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
