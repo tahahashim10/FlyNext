@@ -4,7 +4,7 @@ import { isValidCardNumber, isValidExpiry } from '@/utils/validation';
 import { verifyToken } from '@/utils/auth';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
