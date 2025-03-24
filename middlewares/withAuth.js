@@ -5,7 +5,7 @@ import { verifyToken } from "@/utils/auth";
 export function withAuth(handler) {
   return async (request) => {
     
-    const tokenData = verifyToken(request); // Get token data 
+    const tokenData = await verifyToken(request); // Get token data 
 
     if (!tokenData) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

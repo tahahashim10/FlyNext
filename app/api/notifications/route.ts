@@ -5,7 +5,7 @@ import { verifyToken } from "@/utils/auth";
 // Retrieve notifications for a given user (can be used by both regular users and hotel owners)
 export async function GET(request: NextRequest): Promise<NextResponse> {
 
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
   // Verify the token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

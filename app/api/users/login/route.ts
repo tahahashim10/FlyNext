@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { serialize } from "cookie";
 
 const SECRET_KEY = process.env.JWT_SECRET as string;
 
@@ -42,7 +43,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "30m" });
     const refreshToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
 
-    return NextResponse.json({ accessToken, refreshToken }, { status: 200 });
+    // Set tokens in HTTP-only cookies
+    const accessCookie = serialize("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 30 * 60, // 30 minutes
+    });
+
+    const refreshCookie = serialize("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    const response = NextResponse.json({ message: "Login successful", user });
+    response.headers.set("Set-Cookie", accessCookie);
+    response.headers.append("Set-Cookie", refreshCookie);
+    return response;
+
+    // return NextResponse.json({ accessToken, refreshToken }, { status: 200 });
 
   } catch (error: any) {
     console.error("Login error:", error.stack);

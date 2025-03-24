@@ -9,13 +9,13 @@ interface User {
   email: string;
   profilePicture?: string;
   phoneNumber?: string;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (userData: {
     firstName: string;
     lastName: string;
@@ -31,21 +31,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
 
+  // On mount, fetch the user profile (the cookie is automatically sent)
   useEffect(() => {
-    // Load token and user from localStorage on initial load
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser && storedUser !== "undefined") {
-      setToken(storedToken);
+    const fetchProfile = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const res = await fetch('/api/users/profile', { 
+          method: 'GET',
+          credentials: 'include' 
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        }
       } catch (error) {
-        console.error("Error parsing stored user:", error);
-        setUser(null);
+        console.error('Error fetching user profile:', error);
       }
-    }
+    };
+    fetchProfile();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -53,37 +56,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
+      credentials: 'include', // send cookies
     });
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Login failed');
     }
-    const data = await res.json();
-    setToken(data.accessToken);
-    localStorage.setItem('token', data.accessToken);
-  
-    // Now fetch the user profile using the GET method
-    const profileRes = await fetch('/api/users/profile', {
+    // After login, the server sets an HTTP‑only cookie.
+    // Now fetch the user profile:
+    const profileRes = await fetch('/api/users/profile', { 
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${data.accessToken}`,
-      },
+      credentials: 'include' 
     });
     if (!profileRes.ok) {
-      const error = await profileRes.text();
-      throw new Error(`Failed to fetch profile: ${error}`);
+      const error = await profileRes.json();
+      throw new Error(error.error || 'Failed to fetch profile');
     }
-    const userData = await profileRes.json();
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };  
+    const data = await profileRes.json();
+    setUser(data);
+  };
 
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    await fetch('/api/users/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
   };
 
   const register = async (userData: {
@@ -98,35 +96,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
+      credentials: 'include',
     });
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Registration failed');
     }
-    // Optionally auto-login after registration:
+    // Optionally, auto-login after registration
     await login(userData.email, userData.password);
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     const res = await fetch('/api/users/profile', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
+      credentials: 'include',
     });
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Profile update failed');
     }
     const data = await res.json();
-    setUser(data);
-    localStorage.setItem('user', JSON.stringify(data));
+    setUser(data.updatedUser || data);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, register, updateProfile }}>
+    <AuthContext.Provider value={{ user, login, logout, register, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

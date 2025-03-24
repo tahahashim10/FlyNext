@@ -6,7 +6,7 @@ import { verifyToken } from "@/utils/auth";
 
 // GET: Retrieve the current user's profile
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 // PUT: Update the current user's profile
 export async function PUT(request: NextRequest): Promise<NextResponse> {
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized: No valid token provided." }, { status: 401 });
   }
