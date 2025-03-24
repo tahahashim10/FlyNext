@@ -68,7 +68,7 @@ export async function PUT(
 ): Promise<NextResponse> {
 
   // Verify the token first
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -142,7 +142,7 @@ export async function DELETE(
 ): Promise<NextResponse> {
   
   // Verify the token first
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

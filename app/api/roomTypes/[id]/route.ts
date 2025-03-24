@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   // Verify token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -45,7 +45,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   // Verify token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -142,7 +142,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ): Promise<NextResponse> {
   // Verify token
-  const tokenData = verifyToken(request);
+  const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
