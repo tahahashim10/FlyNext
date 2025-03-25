@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 export default function AddRoomTypePage() {
   const { id: hotelId } = useParams();
-  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     amenities: '',
@@ -14,6 +13,7 @@ export default function AddRoomTypePage() {
     availableRooms: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,6 +22,8 @@ export default function AddRoomTypePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    
     const payload = {
       hotelId: Number(hotelId),
       name: formData.name,
@@ -30,6 +32,7 @@ export default function AddRoomTypePage() {
       images: formData.images.split(',').map(item => item.trim()).filter(Boolean),
       availableRooms: Number(formData.availableRooms)
     };
+    
     try {
       const res = await fetch('/api/roomTypes', {
         method: 'POST',
@@ -41,7 +44,15 @@ export default function AddRoomTypePage() {
         const data = await res.json();
         setError(data.error || 'Failed to add room type');
       } else {
-        router.push(`/hotels/${hotelId}`);
+        setSuccess('Room type added successfully!');
+        // Clear the form
+        setFormData({
+          name: '',
+          amenities: '',
+          pricePerNight: '',
+          images: '',
+          availableRooms: ''
+        });
       }
     } catch (err: any) {
       setError('Error submitting form');
@@ -52,6 +63,7 @@ export default function AddRoomTypePage() {
     <div className="max-w-xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Add Room Type</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
+      {success && <p className="text-green-500 mb-2">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
