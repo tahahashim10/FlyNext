@@ -18,8 +18,7 @@ export default function HotelManagementDashboard() {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        // This endpoint should return hotels owned by the current user.
-        // You might need to implement it on the backend as /api/hotels/owner.
+        // Endpoint that returns hotels owned by the current user.
         const res = await fetch('/api/hotels/owner', { credentials: 'include' });
         if (!res.ok) {
           const data = await res.json();
@@ -55,6 +54,9 @@ export default function HotelManagementDashboard() {
               <p>{hotel.location}</p>
               <p>Star Rating: {hotel.starRating}</p>
               <div className="flex flex-wrap gap-4 mt-2">
+                <Link href={`/hotels/${hotel.id}/edit`} className="btn btn-secondary">
+                  Edit Hotel
+                </Link>
                 <Link href={`/hotels/${hotel.id}/rooms/add`} className="btn btn-secondary">
                   Add Room Type
                 </Link>
@@ -63,9 +65,6 @@ export default function HotelManagementDashboard() {
                 </Link>
                 <Link href={`/bookings/manage?hotelId=${hotel.id}`} className="btn btn-secondary">
                   Manage Bookings
-                </Link>
-                <Link href={`/hotels/${hotel.id}`} className="btn btn-secondary">
-                  Edit Hotel
                 </Link>
               </div>
             </div>
