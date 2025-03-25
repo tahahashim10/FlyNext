@@ -15,7 +15,7 @@ export async function POST(
   }
 
   // Validate the room ID parameter
-  const { id } = params;
+  const { id } = await params;
   const roomId = parseInt(id);
   if (!id || isNaN(roomId)) {
     return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });
