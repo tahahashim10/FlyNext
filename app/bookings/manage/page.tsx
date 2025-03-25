@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import RoomTypeAutoComplete from '@/components/RoomTypeAutoComplete';
 
 interface Booking {
   id: number;
@@ -25,9 +26,8 @@ export default function ManageBookingsPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
+  // Debounce timeout state
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const fetchBookings = async () => {
     setError('');
@@ -35,11 +35,9 @@ export default function ManageBookingsPage() {
     let query = `?`;
     if (filters.startDate) query += `startDate=${filters.startDate}&`;
     if (filters.endDate) query += `endDate=${filters.endDate}&`;
-    if (filters.room) query += `room=${filters.room}`;
+    if (filters.room) query += `room=${encodeURIComponent(filters.room)}`;
     try {
-      const res = await fetch(`/api/bookings/owner${query}`, {
-        credentials: 'include'
-      });
+      const res = await fetch(`/api/bookings/owner${query}`, { credentials: 'include' });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Failed to fetch bookings');
@@ -50,6 +48,20 @@ export default function ManageBookingsPage() {
     } catch (err: any) {
       setError('Error fetching bookings');
     }
+  };
+
+  // Debounce filter changes
+  useEffect(() => {
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    const timeout = setTimeout(() => {
+      fetchBookings();
+    }, 500);
+    setDebounceTimeout(timeout);
+    return () => clearTimeout(timeout);
+  }, [filters]);
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   const handleCancel = async (bookingId: number) => {
@@ -77,12 +89,12 @@ export default function ManageBookingsPage() {
     <div className="max-w-4xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Manage Bookings</h2>
       <div className="mb-4 space-y-4">
-        <div className="flex space-x-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <input
             type="date"
             name="startDate"
             value={filters.startDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             className="input input-bordered"
             placeholder="Start Date"
           />
@@ -90,22 +102,18 @@ export default function ManageBookingsPage() {
             type="date"
             name="endDate"
             value={filters.endDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             className="input input-bordered"
             placeholder="End Date"
           />
-          <input
-            type="text"
-            name="room"
-            value={filters.room}
-            onChange={handleChange}
-            className="input input-bordered"
-            placeholder="Room Type Filter"
-          />
+          <div className="flex-1">
+            <RoomTypeAutoComplete
+              value={filters.room}
+              onChange={(value: any) => setFilters({ ...filters, room: value })}
+            />
+          </div>
         </div>
-        <button onClick={fetchBookings} className="btn btn-primary">
-          Fetch Bookings
-        </button>
+        {/* With debounce, results update automatically; no manual button required */}
       </div>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       {message && <p className="text-green-500 mb-2">{message}</p>}
