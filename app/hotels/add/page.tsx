@@ -15,7 +15,7 @@ export default function AddHotelPage() {
   });
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -34,7 +34,8 @@ export default function AddHotelPage() {
       const res = await fetch('/api/hotels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: 'include'
       });
       if (!res.ok) {
         const data = await res.json();
@@ -98,14 +99,17 @@ export default function AddHotelPage() {
           min="0"
           max="5"
         />
-        <textarea
+        <input
+          type="text"
           name="images"
           placeholder="Image URLs (comma separated)"
           value={formData.images}
           onChange={handleChange}
-          className="textarea textarea-bordered w-full"
+          className="input input-bordered w-full"
         />
-        <button type="submit" className="btn btn-primary w-full">Add Hotel</button>
+        <button type="submit" className="btn btn-primary w-full">
+          Add Hotel
+        </button>
       </form>
     </div>
   );
