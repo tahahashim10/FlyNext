@@ -19,6 +19,24 @@ const NavBar: React.FC = () => {
         {user ? (
           <>
             <NotificationDropdown />
+            {/* Hotel Management dropdown for any logged-in user */}
+            <div className="dropdown dropdown-end">
+              <label tabIndex={0} className="btn btn-ghost">
+                Hotel Management
+              </label>
+              <ul
+                tabIndex={0}
+                className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52"
+              >
+                <li>
+                  <Link href="/hotels/add">Add Hotel</Link>
+                </li>
+                <li>
+                  <Link href="/bookings/manage">Manage Bookings</Link>
+                </li>
+                {/* Optionally, add more links as needed */}
+              </ul>
+            </div>
             <div className="dropdown dropdown-end">
               <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
                 <div className="w-10 rounded-full">
