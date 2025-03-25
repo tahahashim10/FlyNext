@@ -366,6 +366,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!room) {
         return NextResponse.json({ error: `Room with id ${roomId} does not exist.` }, { status: 400 });
       }
+
+      // New check: ensure the room belongs to the hotel
+      if (room.hotelId !== hotelId) {
+        return NextResponse.json({ error: `Room with id ${roomId} does not belong to hotel with id ${hotelId}.` }, { status: 400 });
+      }
+
       if (checkIn && checkOut) {
         const overlappingBookings = await prisma.booking.findMany({
           where: {
