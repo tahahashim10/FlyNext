@@ -74,7 +74,7 @@ export async function PUT(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const { name, logo, address, location, starRating, images } = await request.json();
 
     // Validate required fields (if provided)
@@ -148,7 +148,7 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const idNumber = Number(id);
     if (isNaN(idNumber)) {
       return NextResponse.json({ error: "Invalid hotel id. Must be a number." }, { status: 400 });
