@@ -14,6 +14,7 @@ export default function AddHotelPage() {
     images: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,6 +23,8 @@ export default function AddHotelPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    
     const payload = {
       name: formData.name,
       logo: formData.logo,
@@ -30,6 +33,7 @@ export default function AddHotelPage() {
       starRating: Number(formData.starRating),
       images: formData.images.split(',').map(img => img.trim()).filter(Boolean)
     };
+    
     try {
       const res = await fetch('/api/hotels', {
         method: 'POST',
@@ -37,11 +41,22 @@ export default function AddHotelPage() {
         body: JSON.stringify(payload),
         credentials: 'include'
       });
+      
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Failed to add hotel');
       } else {
-        router.push('/');
+        setSuccess('Hotel added successfully!');
+        // Clear the form after a successful submission:
+        setFormData({
+          name: '',
+          logo: '',
+          address: '',
+          location: '',
+          starRating: '',
+          images: ''
+        });
+        // Optionally, you can call router.push() here if you want to navigate somewhere after a delay.
       }
     } catch (err: any) {
       setError('Error submitting form');
@@ -52,6 +67,7 @@ export default function AddHotelPage() {
     <div className="max-w-xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Add Your Hotel</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
+      {success && <p className="text-green-500 mb-2">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
