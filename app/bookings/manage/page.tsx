@@ -37,7 +37,9 @@ export default function ManageBookingsPage() {
     if (filters.endDate) query += `endDate=${filters.endDate}&`;
     if (filters.room) query += `room=${filters.room}`;
     try {
-      const res = await fetch(`/api/bookings/owner${query}`);
+      const res = await fetch(`/api/bookings/owner${query}`, {
+        credentials: 'include'
+      });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Failed to fetch bookings');
@@ -56,7 +58,8 @@ export default function ManageBookingsPage() {
     try {
       const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
       if (!res.ok) {
         const data = await res.json();
@@ -100,7 +103,9 @@ export default function ManageBookingsPage() {
             placeholder="Room Type Filter"
           />
         </div>
-        <button onClick={fetchBookings} className="btn btn-primary">Fetch Bookings</button>
+        <button onClick={fetchBookings} className="btn btn-primary">
+          Fetch Bookings
+        </button>
       </div>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       {message && <p className="text-green-500 mb-2">{message}</p>}
@@ -140,7 +145,9 @@ export default function ManageBookingsPage() {
             ))}
             {bookings.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center">No bookings found.</td>
+                <td colSpan={7} className="text-center">
+                  No bookings found.
+                </td>
               </tr>
             )}
           </tbody>

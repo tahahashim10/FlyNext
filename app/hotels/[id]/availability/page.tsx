@@ -19,10 +19,10 @@ interface Hotel {
 }
 
 export default function AvailabilityPage() {
-  const { hotelId } = useParams();
+  const { id: hotelId } = useParams();
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [error, setError] = useState('');
-  const [checkDates, setCheckDates] = useState({ startDate: '', endDate: '', roomId: '' });
+  const [checkDates, setCheckDates] = useState({ checkIn: '', checkOut: '' });
   const [availabilityResult, setAvailabilityResult] = useState<any>(null);
   const [updateValues, setUpdateValues] = useState<Record<number, string>>({});
 
@@ -46,26 +46,28 @@ export default function AvailabilityPage() {
     fetchHotel();
   }, [hotelId]);
 
-  const handleCheckChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleCheckChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCheckDates({ ...checkDates, [e.target.name]: e.target.value });
   };
 
   const checkAvailability = async () => {
     setError('');
     setAvailabilityResult(null);
-    if (!checkDates.startDate || !checkDates.endDate || !checkDates.roomId) {
-      setError('Please select a room type and both dates.');
+    if (!checkDates.checkIn || !checkDates.checkOut) {
+      setError('Please select both check-in and check-out dates.');
       return;
     }
     try {
+      // Use the hotel-specific endpoint: /api/hotels/{hotelId}/rooms?checkIn=...&checkOut=...
       const res = await fetch(
-        `/api/hotels/availability?startDate=${checkDates.startDate}&endDate=${checkDates.endDate}&roomId=${checkDates.roomId}`
+        `/api/hotels/${hotelId}/rooms?checkIn=${checkDates.checkIn}&checkOut=${checkDates.checkOut}`
       );
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Failed to check availability');
       } else {
         const data = await res.json();
+        // Expecting an array of room objects
         setAvailabilityResult(data);
       }
     } catch (err: any) {
@@ -84,7 +86,8 @@ export default function AvailabilityPage() {
       const res = await fetch(`/api/hotels/availability/${roomId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ availableRooms: newValue })
+        body: JSON.stringify({ availableRooms: newValue }),
+        credentials: 'include'
       });
       if (!res.ok) {
         const data = await res.json();
@@ -112,31 +115,17 @@ export default function AvailabilityPage() {
       <div className="border p-4 rounded mb-6">
         <h3 className="text-xl font-semibold mb-2">Check Room Availability</h3>
         <div className="flex flex-col md:flex-row gap-4">
-          <select
-            name="roomId"
-            value={checkDates.roomId}
-            onChange={handleCheckChange}
-            className="select select-bordered flex-1"
-          >
-            <option value="">Select Room Type</option>
-            {hotel &&
-              hotel.rooms.map(room => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-          </select>
           <input
             type="date"
-            name="startDate"
-            value={checkDates.startDate}
+            name="checkIn"
+            value={checkDates.checkIn}
             onChange={handleCheckChange}
             className="input input-bordered flex-1"
           />
           <input
             type="date"
-            name="endDate"
-            value={checkDates.endDate}
+            name="checkOut"
+            value={checkDates.checkOut}
             onChange={handleCheckChange}
             className="input input-bordered flex-1"
           />
@@ -144,12 +133,16 @@ export default function AvailabilityPage() {
             Check
           </button>
         </div>
-        {availabilityResult && (
+        {availabilityResult && Array.isArray(availabilityResult) && (
           <div className="mt-4">
-            <p>Room: {availabilityResult.room.name}</p>
-            <p>Total Rooms: {availabilityResult.room.totalRooms}</p>
-            <p>Bookings Count: {availabilityResult.bookingsCount}</p>
-            <p>Available Rooms: {availabilityResult.availableRooms}</p>
+            {availabilityResult.map((room: Room) => (
+              <div key={room.id} className="border p-2 rounded mb-2">
+                <p className="font-bold">{room.name}</p>
+                <p>Price Per Night: {room.pricePerNight}</p>
+                <p>Current Available Rooms: {room.availableRooms}</p>
+                <p>Amenities: {room.amenities.join(', ')}</p>
+              </div>
+            ))}
           </div>
         )}
       </div>

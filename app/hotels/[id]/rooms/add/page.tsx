@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function AddRoomTypePage() {
-  const { hotelId } = useParams();
+  const { id: hotelId } = useParams();
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
@@ -34,7 +34,8 @@ export default function AddRoomTypePage() {
       const res = await fetch('/api/roomTypes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: 'include'
       });
       if (!res.ok) {
         const data = await res.json();
@@ -95,7 +96,9 @@ export default function AddRoomTypePage() {
           className="input input-bordered w-full"
           required
         />
-        <button type="submit" className="btn btn-primary w-full">Add Room Type</button>
+        <button type="submit" className="btn btn-primary w-full">
+          Add Room Type
+        </button>
       </form>
     </div>
   );
