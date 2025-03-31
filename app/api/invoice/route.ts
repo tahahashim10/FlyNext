@@ -4,7 +4,6 @@ import { generateConsolidatedInvoicePDF } from "@/utils/pdfGenerator";
 import { verifyToken } from "@/utils/auth";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Verify token
   const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -17,8 +16,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "bookings must be a non-empty array." }, { status: 400 });
     }
     
-    const aggregatedHotelBookings = [];
-    const aggregatedFlightBookings = [];
+    const aggregatedHotelBookings: any[] = [];
+    const aggregatedFlightBookings: any[] = [];
     let totalCost = 0;
     
     for (const reqItem of bookingRequests) {
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Each booking must have a bookingType of either 'hotel' or 'flight'." }, { status: 400 });
       }
       
-      // Fetch booking details (your getBookingDetails should accept bookingId and bookingType)
       let booking = await getBookingDetails(Number(bookingId), bookingType);
       if (!booking) {
         return NextResponse.json({ error: `Booking ${bookingId} not found.` }, { status: 404 });
@@ -43,41 +41,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
       
       if (bookingType === "hotel") {
-        // For hotel bookings, compute cost: price per night * number of nights.
+        // Compute cost: room.pricePerNight * number of nights.
         const checkInDate = new Date(booking.checkIn);
         const checkOutDate = new Date(booking.checkOut);
         const diffTime = checkOutDate.getTime() - checkInDate.getTime();
         const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const cost = booking.room.pricePerNight * nights;
-        // Add a new property (e.g., totalCost) to the booking.
         booking.totalCost = cost;
         totalCost += cost;
         aggregatedHotelBookings.push(booking);
       } else if (bookingType === "flight") {
-        // For flight bookings, if flightBookingReference exists, fetch additional details from AFS.
-        if (booking.flightBookingReference) {
-          const baseUrl = process.env.AFS_BASE_URL as string;
-          const apiKey = process.env.AFS_API_KEY as string;
-          if (!baseUrl || !apiKey) {
-            return NextResponse.json({ error: "AFS API configuration is missing." }, { status: 500 });
-          }
-          const url = new URL("/api/bookings/retrieve", baseUrl);
-          url.search = new URLSearchParams({
-            lastName: booking.user.lastName,
-            bookingReference: booking.flightBookingReference
-          }).toString();
-          
-          const res = await fetch(url, {
-            headers: { "x-api-key": apiKey },
-          });
-          if (!res.ok) {
-            const errorText = await res.text();
-            return NextResponse.json({ error: `AFS API error: ${res.status} - ${errorText}` }, { status: res.status });
-          }
-          const flightDetails = await res.json();
-          booking.flightDetails = flightDetails;
-        }
-        // For flight bookings, cost is stored in the booking (using the new cost field)
+        // For flight bookings, assume cost is stored in booking.cost.
         if (booking.cost) {
           totalCost += booking.cost;
         }
@@ -85,7 +59,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
     
-    // Prepare aggregated data for PDF generation.
     const consolidatedData = {
       hotelBookings: aggregatedHotelBookings,
       flightBookings: aggregatedFlightBookings,
