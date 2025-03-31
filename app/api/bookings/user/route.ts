@@ -20,241 +20,86 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-// for U20
+// PATCH endpoint for user cancellation (U20)
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
+  
   try {
     const body = await request.json();
 
-    const hasSingleCancellation = body.bookingId !== undefined || body.bookingType !== undefined;
-    const hasBulkCancellation = body.hotelBookingIds !== undefined || body.flightBookingIds !== undefined;
-    const hasCancelAll = body.cancelAll !== undefined;
-
-    if ((hasSingleCancellation && (hasBulkCancellation || hasCancelAll)) ||
-        (hasBulkCancellation && (hasSingleCancellation || hasCancelAll)) ||
-        (hasCancelAll && (hasSingleCancellation || hasBulkCancellation))) {
-      return NextResponse.json(
-        { error: "Please provide only one cancellation method: single cancellation (bookingId and bookingType), bulk cancellation (hotelBookingIds and/or flightBookingIds), or cancelAll." },
-        { status: 400 }
-      );
+    // Only support single cancellation for user-initiated cancellation.
+    if (!(body.bookingId && body.bookingType)) {
+      return NextResponse.json({ error: "For cancellation, provide both bookingId and bookingType." }, { status: 400 });
     }
-
-
-    // Validate hotelBookingIds: must be an array of numbers.
-    if (body.hotelBookingIds) {
-      if (!Array.isArray(body.hotelBookingIds) || !body.hotelBookingIds.every((item: any) => !isNaN(Number(item)))) {
-        return NextResponse.json(
-          { error: "hotelBookingIds must be an array of numbers." },
-          { status: 400 }
-        );
-      }
+    
+    const bookingId = Number(body.bookingId);
+    if (isNaN(bookingId)) {
+      return NextResponse.json({ error: "bookingId must be a number." }, { status: 400 });
     }
-
-    // Validate flightBookingIds: must be an array of numbers.
-    if (body.flightBookingIds) {
-      if (!Array.isArray(body.flightBookingIds) || !body.flightBookingIds.every((item: any) => !isNaN(Number(item)))) {
-        return NextResponse.json(
-          { error: "flightBookingIds must be an array of numbers." },
-          { status: 400 }
-        );
-      }
+    const bookingType = body.bookingType;
+    if (!["hotel", "flight"].includes(bookingType)) {
+      return NextResponse.json({ error: "bookingType must be either 'hotel' or 'flight'." }, { status: 400 });
     }
-
-
-    // Handle cancelAll option
-    if (body.cancelAll) {
-      const hotelBookings = await prisma.booking.findMany({
-        where: {
-          userId: tokenData.userId,
-          status: { not: 'CANCELED' },
-        },
+    
+    let booking: any = null;
+    if (bookingType === "hotel") {
+      booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    } else {
+      booking = await prisma.flightBooking.findUnique({ where: { id: bookingId } });
+    }
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
+    }
+    // Verify the booking belongs to the user
+    if (booking.userId !== tokenData.userId) {
+      return NextResponse.json({ error: "Forbidden: You are not authorized to cancel this booking." }, { status: 403 });
+    }
+    if (booking.status === "CANCELED") {
+      return NextResponse.json({ message: "Booking is already cancelled.", booking }, { status: 200 });
+    }
+    
+    if (bookingType === "hotel") {
+      booking = await prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: "CANCELED" },
       });
-
-      const flightBookings = await prisma.flightBooking.findMany({
-        where: {
-          userId: tokenData.userId,
-          status: { not: 'CANCELED' },
-        },
-      });
-
-      if (hotelBookings.length === 0 && flightBookings.length === 0) {
-        return NextResponse.json(
-          { message: "No active bookings found to cancel." },
-          { status: 200 }
-        );
-      }
-
-      const hotelUpdated = hotelBookings.length > 0
-        ? await prisma.booking.updateMany({
-            where: {
-              id: { in: hotelBookings.map(b => b.id) },
-              status: { not: 'CANCELED' },
-            },
-            data: { status: 'CANCELED' },
-          })
-        : { count: 0 };
-
-      const flightUpdated = flightBookings.length > 0
-        ? await prisma.flightBooking.updateMany({
-            where: {
-              id: { in: flightBookings.map(b => b.id) },
-              status: { not: 'CANCELED' },
-            },
-            data: { status: 'CANCELED' },
-          })
-        : { count: 0 };
-
-      const totalCanceled = hotelUpdated.count + flightUpdated.count;
-      await prisma.notification.create({
-        data: {
-          userId: tokenData.userId,
-          message: `All your active bookings have been canceled successfully.`,
-        },
-      });
-
-      return NextResponse.json({ message: 'All bookings cancelled', count: totalCanceled }, { status: 200 });
-    }
-
-    // Bulk Cancellation: Expect separate arrays for hotel and flight booking IDs.
-    if (body.hotelBookingIds || body.flightBookingIds) {
-      const hotelBookingIds = body.hotelBookingIds && Array.isArray(body.hotelBookingIds)
-        ? body.hotelBookingIds.map(Number)
-        : [];
-      const flightBookingIds = body.flightBookingIds && Array.isArray(body.flightBookingIds)
-        ? body.flightBookingIds.map(Number)
-        : [];
-
-      const hotelBookings = hotelBookingIds.length > 0 
-        ? await prisma.booking.findMany({
-            where: {
-              id: { in: hotelBookingIds },
-              userId: tokenData.userId,
-              status: { not: 'CANCELED' },
-            },
-          })
-        : [];
-      const flightBookings = flightBookingIds.length > 0 
-        ? await prisma.flightBooking.findMany({
-            where: {
-              id: { in: flightBookingIds },
-              userId: tokenData.userId,
-              status: { not: 'CANCELED' },
-            },
-          })
-        : [];
-
-      if (hotelBookings.length === 0 && flightBookings.length === 0) {
-        return NextResponse.json(
-          { message: "No active bookings found in the provided lists, or they don't belong to you." },
-          { status: 200 }
-        );
-      }
-
-      const hotelUpdated = hotelBookings.length > 0
-        ? await prisma.booking.updateMany({
-            where: {
-              id: { in: hotelBookings.map(b => b.id) },
-              status: { not: 'CANCELED' },
-            },
-            data: { status: 'CANCELED' },
-          })
-        : { count: 0 };
-
-      const flightUpdated = flightBookings.length > 0
-        ? await prisma.flightBooking.updateMany({
-            where: {
-              id: { in: flightBookings.map(b => b.id) },
-              status: { not: 'CANCELED' },
-            },
-            data: { status: 'CANCELED' },
-          })
-        : { count: 0 };
-
-      const totalCanceled = hotelUpdated.count + flightUpdated.count;
-      await prisma.notification.create({
-        data: {
-          userId: tokenData.userId,
-          message: `Your selected bookings have been canceled successfully.`,
-        },
-      });
-      return NextResponse.json({ message: 'Bookings cancelled', count: totalCanceled }, { status: 200 });
-    }
-    // Single Cancellation: Expect bookingId and bookingType.
-    else if (body.bookingId && body.bookingType) {
-      const bookingId = Number(body.bookingId);
-      if (isNaN(bookingId)) {
-        return NextResponse.json({ error: "bookingId must be a number." }, { status: 400 });
-      }
-      const bookingType = body.bookingType;
-      if (!["hotel", "flight"].includes(bookingType)) {
-        return NextResponse.json({ error: "bookingType must be either 'hotel' or 'flight'." }, { status: 400 });
-      }
-      
-      let booking: any = null;
-      if (bookingType === "hotel") {
-        booking = await prisma.booking.findUnique({ where: { id: bookingId } });
-      } else {
-        booking = await prisma.flightBooking.findUnique({ where: { id: bookingId } });
-      }
-      if (!booking) {
-        return NextResponse.json({ error: "Booking not found." }, { status: 404 });
-      }
-      if (booking.userId !== tokenData.userId) {
-        return NextResponse.json({ error: "Forbidden: You are not authorized to cancel this booking." }, { status: 403 });
-      }
-      if (booking.status === 'CANCELED') {
-        return NextResponse.json({ message: "Booking is already cancelled.", booking }, { status: 200 });
-      }
-      if (bookingType === "hotel") {
-        booking = await prisma.booking.update({
-          where: { id: bookingId },
-          data: { status: "CANCELED" },
-        });
-      } else {
-
-        // For flight bookings, call the new AFS cancellation API first.
+    } else {
+      // For flight bookings: Only call AFS if a bookingReference exists.
+      if (booking.flightBookingReference) {
         try {
           await callAfsCancelBooking(booking);
         } catch (error: any) {
           return NextResponse.json({ error: "Failed to cancel flight booking via AFS: " + error.message }, { status: 400 });
         }
-
-        booking = await prisma.flightBooking.update({
-          where: { id: bookingId },
-          data: { status: "CANCELED" },
-        });
       }
-      await prisma.notification.create({
-        data: {
-          userId: tokenData.userId,
-          message: `Your booking has been canceled successfully.`,
-        },
+      booking = await prisma.flightBooking.update({
+        where: { id: bookingId },
+        data: { status: "CANCELED" },
       });
-      return NextResponse.json({ message: 'Booking cancelled', booking }, { status: 200 });
-    } else {
-      return NextResponse.json({ error: "Invalid request. For single cancellation, provide both bookingId and bookingType; for bulk cancellation, provide hotelBookingIds and/or flightBookingIds." }, { status: 400 });
     }
+    await prisma.notification.create({
+      data: {
+        userId: tokenData.userId,
+        message: "Your booking has been canceled successfully.",
+      },
+    });
+    return NextResponse.json({ message: "Booking cancelled", booking }, { status: 200 });
   } catch (error: any) {
     console.error("Cancel Bookings Error:", error.stack);
-    if (error.code === "P2025") {
-      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
-    }
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
 
-// Helper function for calling AFS cancellation API
+// Helper function for calling AFS cancellation API (for flight bookings)
 async function callAfsCancelBooking(booking: { flightBookingReference: string | null; lastName: string; }): Promise<any> {
   const baseUrl = process.env.AFS_BASE_URL as string;
   const apiKey = process.env.AFS_API_KEY as string;
   if (!baseUrl || !apiKey) {
     throw new Error("AFS API configuration is missing.");
   }
-  // Call the new AFS API endpoint to cancel a flight booking.
   const url = new URL("/api/bookings/cancel", baseUrl);
   const res = await fetch(url, {
     method: "POST",
@@ -262,7 +107,6 @@ async function callAfsCancelBooking(booking: { flightBookingReference: string | 
       "Content-Type": "application/json",
       "x-api-key": apiKey,
     },
-    // Now include both bookingReference and lastName as required by AFS.
     body: JSON.stringify({
       bookingReference: booking.flightBookingReference,
       lastName: booking.lastName,
@@ -276,15 +120,13 @@ async function callAfsCancelBooking(booking: { flightBookingReference: string | 
 }
 
 
-
-
-// for U15
+// POST endpoint for creating bookings (U15)
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
+  
   try {
     const {
       hotelId,    // for hotel booking
@@ -298,10 +140,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       email,
       passportNumber
     } = await request.json();
-
+    
     const userId: number = tokenData.userId;
-
-    // Validate hotel booking inputs (if provided)
+    
+    // Validate hotel booking inputs if provided.
     if ((hotelId !== undefined || roomId !== undefined) && (hotelId === undefined || roomId === undefined)) {
       return NextResponse.json({ error: "Both hotelId and roomId must be provided for a hotel reservation." }, { status: 400 });
     }
@@ -324,8 +166,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "checkIn must be before checkOut." }, { status: 400 });
       }
     }
-
-    // Validate flight booking inputs if flightIds provided
+    
+    // Validate flight booking inputs if flightIds provided.
     if (flightIds !== undefined) {
       if (!Array.isArray(flightIds)) {
         return NextResponse.json({ error: "flightIds must be an array." }, { status: 400 });
@@ -352,14 +194,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       }
     }
-
-    // Determine which booking types are requested
+    
+    // Determine which booking types are requested.
     const isHotelBookingRequested = hotelId && roomId;
     const isFlightBookingRequested = flightIds && Array.isArray(flightIds) && flightIds.length > 0;
     if (!isHotelBookingRequested && !isFlightBookingRequested) {
       return NextResponse.json({ error: "At least one booking type (hotel or flight) must be provided." }, { status: 400 });
     }
-
+    
     let hotelBooking = null;
     if (isHotelBookingRequested) {
       const hotelRecord = await prisma.hotel.findUnique({ where: { id: hotelId } });
@@ -370,17 +212,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!room) {
         return NextResponse.json({ error: `Room with id ${roomId} does not exist.` }, { status: 400 });
       }
-
-      // New check: ensure the room belongs to the hotel
       if (room.hotelId !== hotelId) {
         return NextResponse.json({ error: `Room with id ${roomId} does not belong to hotel with id ${hotelId}.` }, { status: 400 });
       }
-
       if (checkIn && checkOut) {
         const overlappingBookings = await prisma.booking.findMany({
           where: {
             roomId: roomId,
-            status: { not: 'CANCELED' },
+            status: { not: "CANCELED" },
             checkIn: { lt: new Date(checkOut) },
             checkOut: { gt: new Date(checkIn) },
           },
@@ -396,13 +235,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           roomId,
           checkIn: checkIn ? new Date(checkIn) : null,
           checkOut: checkOut ? new Date(checkOut) : null,
-          status: status || 'PENDING',
+          status: status || "PENDING",
         },
       });
       await prisma.notification.create({
         data: {
           userId,
-          message: `Your reservation at ${hotelRecord.name} (Room: ${room.name}) has been successfully created. Check-in: ${checkIn || "N/A"}, Check-out: ${checkOut || "N/A"}.`
+          message: `Your reservation at ${hotelRecord.name} (Room: ${room.name}) has been successfully created. Check-in: ${checkIn || "N/A"}, Check-out: ${checkOut || "N/A"}.`,
         },
       });
       await prisma.notification.create({
@@ -412,7 +251,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       });
     }
-
+    
     let flightBooking = null;
     if (isFlightBookingRequested) {
       const baseUrl = process.env.AFS_BASE_URL as string;
@@ -420,7 +259,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!baseUrl || !apiKey) {
         return NextResponse.json({ error: "AFS API configuration is missing" }, { status: 500 });
       }
-
+      
       let totalFlightCost = 0;
       for (const flightId of flightIds) {
         const url = new URL(`/api/flights/${flightId}`, baseUrl);
@@ -436,7 +275,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         totalFlightCost += flightData.price;
       }
-
+      
       flightBooking = await prisma.flightBooking.create({
         data: {
           userId,
@@ -445,24 +284,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           lastName,
           email,
           passportNumber,
-          status: status || 'PENDING',
+          status: status || "PENDING",
           cost: totalFlightCost,
         },
       });
       await prisma.notification.create({
         data: {
           userId,
-          message: `Your flight reservation is currently pending. Complete the payment process to secure your seat(s).`
+          message: "Your flight reservation is currently pending. Complete the payment process to secure your seat(s).",
         },
       });
     }
-
+    
     return NextResponse.json({ hotelBooking, flightBooking }, { status: 201 });
   } catch (error: any) {
     console.error("Booking Error:", error.stack);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
-
-
-
