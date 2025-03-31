@@ -5,9 +5,11 @@ import { useState } from 'react';
 interface SuggestionsProps {
   type: 'hotel' | 'flight';
   query: string;
+  placeholder?: string;
+  onSelect: (selected: string) => void;
 }
 
-export default function Suggestions({ type, query }: SuggestionsProps) {
+export default function Suggestions({ type, query, placeholder, onSelect }: SuggestionsProps) {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [error, setError] = useState('');
 
@@ -40,7 +42,11 @@ export default function Suggestions({ type, query }: SuggestionsProps) {
       {suggestions.length > 0 && (
         <ul className="list-disc pl-5">
           {suggestions.map((sugg, index) => (
-            <li key={index}>
+            <li
+              key={index}
+              className="cursor-pointer hover:underline"
+              onClick={() => onSelect(type === 'hotel' ? sugg.name : sugg.id)}
+            >
               {type === 'hotel'
                 ? `${sugg.name} - ${sugg.starRating} stars`
                 : `${sugg.airline.name} - $${sugg.price}`}
@@ -48,6 +54,7 @@ export default function Suggestions({ type, query }: SuggestionsProps) {
           ))}
         </ul>
       )}
+      {placeholder && <p className="text-gray-500 text-sm mt-1">{placeholder}</p>}
     </div>
   );
 }
