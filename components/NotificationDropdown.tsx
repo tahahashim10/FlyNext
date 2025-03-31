@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+// We no longer need to extract "token" since cookies are sent automatically.
 import { useAuth } from '../context/AuthContext';
 
 interface Notification {
@@ -13,15 +14,13 @@ interface Notification {
 const NotificationDropdown: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { token } = useAuth();
+  // Removed: const { token } = useAuth();
 
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications', {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // ensures cookies are sent
       });
       if (!res.ok) {
         console.error('Failed to fetch notifications');
@@ -36,22 +35,19 @@ const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [token]);
+  }, []);
 
   const markAsRead = async (id: number) => {
     try {
       const res = await fetch('/api/notifications', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ notificationId: id }),
       });
       if (!res.ok) {
         console.error('Failed to mark notification as read');
       } else {
-        // Optionally update the local state to mark this notification as read
         setNotifications((prev) =>
           prev.map((notif) =>
             notif.id === id ? { ...notif, read: true } : notif
