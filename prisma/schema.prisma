@@ -101,6 +101,7 @@ model FlightBooking {
   email                  String
   passportNumber         String
   status                 BookingStatus @default(CONFIRMED)
+  cost                   Float?       
 
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt

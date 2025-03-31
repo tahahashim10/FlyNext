@@ -330,6 +330,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!Array.isArray(flightIds)) {
         return NextResponse.json({ error: "flightIds must be an array." }, { status: 400 });
       }
+      // Enforce single flight booking: only one flightId is allowed.
+      if (flightIds.length !== 1) {
+        return NextResponse.json({ error: "Only one flight can be booked at a time." }, { status: 400 });
+      }
       if (flightIds.length > 0) {
         if (!firstName || typeof firstName !== "string" || firstName.trim() === "") {
           return NextResponse.json({ error: "firstName is required and must be a non-empty string for flight booking." }, { status: 400 });
@@ -411,54 +415,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     let flightBooking = null;
     if (isFlightBookingRequested) {
-      
-      // Get the AFS configuration from the environment
       const baseUrl = process.env.AFS_BASE_URL as string;
       const apiKey = process.env.AFS_API_KEY as string;
       if (!baseUrl || !apiKey) {
-        return NextResponse.json(
-          { error: "AFS API configuration is missing" },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "AFS API configuration is missing" }, { status: 500 });
       }
 
-      // For each provided flight id, verify it exists and is scheduled.
+      let totalFlightCost = 0;
       for (const flightId of flightIds) {
         const url = new URL(`/api/flights/${flightId}`, baseUrl);
         const res = await fetch(url.toString(), {
           headers: { "x-api-key": apiKey },
         });
-        // Parse the response once.
         const flightData = await res.json();
-        // If the response is not OK or if flightData is null/undefined, return an error.
         if (!res.ok || !flightData) {
-          return NextResponse.json(
-            { error: `Flight ${flightId} not found.` },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: `Flight ${flightId} not found.` }, { status: 400 });
         }
-        // Check that the flight's status is "SCHEDULED".
         if (flightData.status !== "SCHEDULED") {
-          return NextResponse.json(
-            { error: `Flight ${flightId} is not scheduled.` },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: `Flight ${flightId} is not scheduled.` }, { status: 400 });
         }
+        totalFlightCost += flightData.price;
       }
-      
 
-
-      // Create a flight booking record in the FlightBooking table.
       flightBooking = await prisma.flightBooking.create({
         data: {
           userId,
-          // flightBookingReference remains null; to be filled at checkout.
-          flightIds, // assuming JSON support; otherwise, store as a string.
+          flightIds, // stored as JSON
           firstName,
           lastName,
           email,
           passportNumber,
           status: status || 'PENDING',
+          cost: totalFlightCost,
         },
       });
       await prisma.notification.create({
