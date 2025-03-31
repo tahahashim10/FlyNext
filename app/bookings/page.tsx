@@ -19,8 +19,8 @@ export default function BookingFormPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
   const [showHotelSuggestions, setShowHotelSuggestions] = useState(false);
+  const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
@@ -31,7 +31,7 @@ export default function BookingFormPage() {
     setError('');
     setLoading(true);
 
-    // Prepare payload based on which booking parts are filled
+    // Prepare payload based on provided inputs:
     const payload: any = {};
     if (bookingData.hotelId && bookingData.roomId) {
       payload.hotelId = Number(bookingData.hotelId);
@@ -42,14 +42,17 @@ export default function BookingFormPage() {
       }
     }
     if (bookingData.flightIds.trim()) {
-      payload.flightIds = bookingData.flightIds.split(',').map(id => id.trim()).filter(Boolean);
+      payload.flightIds = bookingData.flightIds
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
       payload.firstName = bookingData.firstName;
       payload.lastName = bookingData.lastName;
       payload.email = bookingData.email;
       payload.passportNumber = bookingData.passportNumber;
     }
     if (!payload.hotelId && !payload.flightIds) {
-      setError('Please provide at least hotel or flight booking details.');
+      setError('Please provide either hotel or flight booking details.');
       setLoading(false);
       return;
     }
@@ -67,7 +70,7 @@ export default function BookingFormPage() {
         setLoading(false);
       } else {
         const data = await res.json();
-        // Prioritize flight booking if available, otherwise hotel
+        // If both types were requested, prioritize flight booking if available.
         let booking, bookingType;
         if (data.flightBooking) {
           booking = data.flightBooking;
@@ -80,7 +83,7 @@ export default function BookingFormPage() {
           setLoading(false);
           return;
         }
-        // Navigate to checkout page with query parameters
+        // Route to checkout page with bookingId and bookingType as query params.
         router.push(`/checkout?bookingId=${booking.id}&bookingType=${bookingType}`);
       }
     } catch (err: any) {
@@ -94,13 +97,13 @@ export default function BookingFormPage() {
       <h2 className="text-2xl font-bold mb-4">Book Your Itinerary</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Hotel Reservation Section */}
-        <div>
-          <h3 className="font-semibold">Hotel Reservation (Optional)</h3>
+        {/* Hotel Booking Section */}
+        <div className="border p-4 rounded">
+          <h3 className="font-semibold mb-2">Hotel Reservation (Optional)</h3>
           <input
             type="number"
             name="hotelId"
-            placeholder="Hotel ID"
+            placeholder="Hotel ID (choose from your owned hotels)"
             value={bookingData.hotelId}
             onChange={handleChange}
             className="input input-bordered w-full mb-2"
@@ -108,7 +111,7 @@ export default function BookingFormPage() {
           <input
             type="number"
             name="roomId"
-            placeholder="Room ID"
+            placeholder="Room ID (choose from available room types)"
             value={bookingData.roomId}
             onChange={handleChange}
             className="input input-bordered w-full mb-2"
@@ -117,7 +120,6 @@ export default function BookingFormPage() {
             <input
               type="date"
               name="checkIn"
-              placeholder="Check-In Date"
               value={bookingData.checkIn}
               onChange={handleChange}
               className="input input-bordered flex-1"
@@ -125,7 +127,6 @@ export default function BookingFormPage() {
             <input
               type="date"
               name="checkOut"
-              placeholder="Check-Out Date"
               value={bookingData.checkOut}
               onChange={handleChange}
               className="input input-bordered flex-1"
@@ -133,19 +134,19 @@ export default function BookingFormPage() {
           </div>
           <button
             type="button"
-            onClick={() => setShowFlightSuggestions(true)}
+            onClick={() => setShowHotelSuggestions(true)}
             className="btn btn-secondary btn-sm mb-2"
           >
-            Show Flight Suggestions for This City
+            Get Hotel Suggestions
           </button>
-          {showFlightSuggestions && (
-            <Suggestions type="flight" query={bookingData.hotelId} />
+          {showHotelSuggestions && (
+            <Suggestions type="hotel" query={bookingData.hotelId} />
           )}
         </div>
 
-        {/* Flight Reservation Section */}
-        <div>
-          <h3 className="font-semibold">Flight Reservation (Optional)</h3>
+        {/* Flight Booking Section */}
+        <div className="border p-4 rounded">
+          <h3 className="font-semibold mb-2">Flight Reservation (Optional)</h3>
           <input
             type="text"
             name="flightIds"
@@ -188,13 +189,13 @@ export default function BookingFormPage() {
           />
           <button
             type="button"
-            onClick={() => setShowHotelSuggestions(true)}
+            onClick={() => setShowFlightSuggestions(true)}
             className="btn btn-secondary btn-sm mb-2"
           >
-            Show Hotel Suggestions for This City
+            Get Flight Suggestions
           </button>
-          {showHotelSuggestions && (
-            <Suggestions type="hotel" query={bookingData.email} /> // Adjust query as needed
+          {showFlightSuggestions && (
+            <Suggestions type="flight" query={bookingData.email} /> // Adjust query as needed
           )}
         </div>
         <button type="submit" className="btn btn-primary w-full" disabled={loading}>

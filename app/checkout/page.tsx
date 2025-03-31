@@ -6,14 +6,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 interface Booking {
   id: number;
   status: string;
-  // For hotel booking:
+  // Hotel booking fields:
   hotel?: { name: string; location: string };
   room?: { name: string; pricePerNight: number };
   checkIn?: string;
   checkOut?: string;
-  // For flight booking:
+  // Flight booking field:
   flightBookingReference?: string;
-  // Add additional fields as needed
 }
 
 export default function CheckoutPage() {
@@ -89,7 +88,7 @@ export default function CheckoutPage() {
         setLoading(false);
       } else {
         setSuccess('Booking confirmed! Invoice generated.');
-        // Open PDF invoice in a new tab
+        // Open PDF invoice in new tab
         window.open(`/api/invoice?bookingId=${bookingId}&bookingType=${bookingType}`, '_blank');
         setLoading(false);
       }
@@ -118,7 +117,7 @@ export default function CheckoutPage() {
           ) : bookingType === 'flight' ? (
             <>
               <p>Flight Booking Reference: {booking.flightBookingReference}</p>
-              {/* Additional flight details if needed */}
+              {/* Additional flight details can be rendered here */}
             </>
           ) : null}
         </div>
