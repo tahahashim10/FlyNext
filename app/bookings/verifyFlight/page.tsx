@@ -1,39 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-export default function VerifyFlightPage() {
+interface BookingSummary {
+  status: string;
+  bookingReference: string;
+  ticketNumber: string;
+}
+
+export default function VerifyFlightBookingPage() {
   const [lastName, setLastName] = useState('');
   const [bookingReference, setBookingReference] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [summary, setSummary] = useState<BookingSummary | null>(null);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setResult(null);
+    setSummary(null);
     try {
       const res = await fetch(
         `/api/bookings/verifyFlight?lastName=${encodeURIComponent(lastName)}&bookingReference=${encodeURIComponent(bookingReference)}`,
-        { credentials: 'include' }
+        { method: 'GET', credentials: 'include' }
       );
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || 'Verification failed');
       } else {
-        const data = await res.json();
-        setResult(data);
+        const bookingSummary: BookingSummary = {
+          status: data.status || 'unknown',
+          bookingReference: data.bookingReference,
+          ticketNumber: data.ticketNumber
+        };
+        setSummary(bookingSummary);
       }
     } catch (err: any) {
-      setError('Error verifying flight booking');
+      setError('Error verifying booking');
     }
   };
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Verify Flight Booking</h2>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <h1 className="text-3xl font-bold mb-4">Verify Flight Booking</h1>
+      {error && <p className="text-red-500">{error}</p>}
+      <form onSubmit={handleVerify} className="space-y-4">
         <input
           type="text"
           placeholder="Last Name"
@@ -51,12 +61,21 @@ export default function VerifyFlightPage() {
           required
         />
         <button type="submit" className="btn btn-primary w-full">
-          Verify
+          Verify Booking
         </button>
       </form>
-      {result && (
-        <div className="mt-4 p-4 border rounded">
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+      {summary && (
+        <div className="mt-6 p-4 border rounded shadow">
+          <h2 className="text-2xl font-semibold mb-2">Booking Summary</h2>
+          <p>
+            <strong>Status:</strong> {summary.status}
+          </p>
+          <p>
+            <strong>Booking Reference:</strong> {summary.bookingReference}
+          </p>
+          <p>
+            <strong>Ticket Number:</strong> {summary.ticketNumber}
+          </p>
         </div>
       )}
     </div>
