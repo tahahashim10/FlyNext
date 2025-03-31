@@ -44,9 +44,10 @@ export default function MyBookingsPage() {
     setError('');
     setMessage('');
     try {
-      const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
-        method: 'POST',
+      const res = await fetch('/api/bookings/user', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, bookingType }),
         credentials: 'include'
       });
       if (!res.ok) {
@@ -59,7 +60,7 @@ export default function MyBookingsPage() {
     } catch (err: any) {
       setError('Error canceling booking');
     }
-  };
+  };  
 
   return (
     <div className="max-w-4xl mx-auto p-4">
