@@ -15,7 +15,7 @@ interface HotelBooking {
 interface FlightBooking {
   id: number;
   status: string;
-  flightIds: string[] | string; // stored as JSON; could be an array or a string
+  flightIds: string[] | string;
   cost?: number;
 }
 
@@ -38,7 +38,7 @@ export default function CartPage() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch the user's pending bookings from your /api/bookings/user endpoint.
+  // Fetch pending bookings from your /api/bookings/user endpoint.
   const fetchBookings = async () => {
     try {
       const res = await fetch('/api/bookings/user', { credentials: 'include' });
@@ -47,7 +47,7 @@ export default function CartPage() {
         setError(data.error || 'Failed to fetch bookings');
       } else {
         const data: BookingsResponse = await res.json();
-        // Filter to only PENDING bookings
+        // Filter only PENDING bookings.
         const pendingHotel = data.hotelBookings.filter(b => b.status === 'PENDING');
         const pendingFlight = data.flightBookings.filter(b => b.status === 'PENDING');
         setBookings({ hotelBookings: pendingHotel, flightBookings: pendingFlight });
@@ -61,7 +61,7 @@ export default function CartPage() {
     fetchBookings();
   }, []);
 
-  // Toggle selection for a booking
+  // Toggle selection for a booking.
   const toggleSelectBooking = (id: number, type: 'hotel' | 'flight') => {
     setSelectedBookings(prev => {
       const exists = prev.find(b => b.id === id && b.type === type);
@@ -73,7 +73,7 @@ export default function CartPage() {
     });
   };
 
-  // Compute hotel booking cost: price per night * number of nights
+  // Compute hotel booking cost: room.pricePerNight * number of nights.
   const computeHotelCost = (booking: HotelBooking): number => {
     const checkInDate = new Date(booking.checkIn);
     const checkOutDate = new Date(booking.checkOut);
@@ -82,7 +82,7 @@ export default function CartPage() {
     return booking.room.pricePerNight * nights;
   };
 
-  // Calculate total cost for selected bookings
+  // Calculate total cost for selected bookings.
   const totalCost = selectedBookings.reduce((sum, sel) => {
     if (sel.type === 'hotel') {
       const booking = bookings.hotelBookings.find(b => b.id === sel.id);
@@ -102,7 +102,41 @@ export default function CartPage() {
     setCardInfo({ ...cardInfo, [e.target.name]: e.target.value });
   };
 
-  // Process checkout for each selected booking
+  // Function to download invoice PDF.
+  const downloadInvoice = async (selected: SelectedBooking[]) => {
+    try {
+      const payload = {
+        bookings: selected.map(b => ({
+          bookingId: Number(b.id), // ensure numeric
+          bookingType: b.type
+        }))
+      };
+      const res = await fetch('/api/invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Invoice generation failed');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'invoice_consolidated.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      throw new Error(err.message || 'Error downloading invoice');
+    }
+  };
+  
+
+  // Process checkout for each selected booking.
   const handleCheckout = async () => {
     setError('');
     setSuccess('');
@@ -116,7 +150,7 @@ export default function CartPage() {
     }
     setLoading(true);
     try {
-      // Process each selected booking by calling your POST /api/checkout route
+      // Process each selected booking individually.
       for (const sel of selectedBookings) {
         const payload = {
           bookingId: sel.id,
@@ -136,8 +170,10 @@ export default function CartPage() {
           throw new Error(`Checkout failed for booking ${sel.id}: ${data.error || ''}`);
         }
       }
-      setSuccess('Selected bookings confirmed successfully!');
-      // Refresh bookings and clear selections
+      // After successful checkout, download the consolidated invoice.
+      await downloadInvoice(selectedBookings);
+      setSuccess('Selected bookings confirmed and invoice downloaded successfully!');
+      // Refresh bookings and clear selections.
       await fetchBookings();
       setSelectedBookings([]);
     } catch (err: any) {
