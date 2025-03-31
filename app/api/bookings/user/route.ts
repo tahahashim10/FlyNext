@@ -412,6 +412,42 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let flightBooking = null;
     if (isFlightBookingRequested) {
       
+      // Get the AFS configuration from the environment
+      const baseUrl = process.env.AFS_BASE_URL as string;
+      const apiKey = process.env.AFS_API_KEY as string;
+      if (!baseUrl || !apiKey) {
+        return NextResponse.json(
+          { error: "AFS API configuration is missing" },
+          { status: 500 }
+        );
+      }
+
+      // For each provided flight id, verify it exists and is scheduled.
+      for (const flightId of flightIds) {
+        const url = new URL(`/api/flights/${flightId}`, baseUrl);
+        const res = await fetch(url.toString(), {
+          headers: { "x-api-key": apiKey },
+        });
+        // Parse the response once.
+        const flightData = await res.json();
+        // If the response is not OK or if flightData is null/undefined, return an error.
+        if (!res.ok || !flightData) {
+          return NextResponse.json(
+            { error: `Flight ${flightId} not found.` },
+            { status: 400 }
+          );
+        }
+        // Check that the flight's status is "SCHEDULED".
+        if (flightData.status !== "SCHEDULED") {
+          return NextResponse.json(
+            { error: `Flight ${flightId} is not scheduled.` },
+            { status: 400 }
+          );
+        }
+      }
+      
+
+
       // Create a flight booking record in the FlightBooking table.
       flightBooking = await prisma.flightBooking.create({
         data: {
