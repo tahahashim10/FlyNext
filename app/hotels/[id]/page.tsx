@@ -71,8 +71,6 @@ export default function HotelDetailPage() {
           <p>{hotel.address}</p>
           <p>Location: {hotel.location}</p>
           <p>Star Rating: {hotel.starRating}</p>
-
-          {/* Map container with fixed size */}
           {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
             <div className="mt-4 w-full h-64 overflow-hidden">
               <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
@@ -80,12 +78,6 @@ export default function HotelDetailPage() {
           ) : (
             <p>No map available.</p>
           )}
-
-          <div className="mt-4">
-            <Link href={`/hotels/${hotel.id}/rooms`}>
-              <button className="btn btn-primary">Check Room Availability</button>
-            </Link>
-          </div>
         </div>
       </div>
 
@@ -112,7 +104,7 @@ export default function HotelDetailPage() {
             {hotel.rooms.map((room) => (
               <div key={room.id} className="border p-4 rounded">
                 <h3 className="text-xl font-bold">{room.type}</h3>
-                <p>Price Per Night: {room.pricePerNight}</p>
+                <p>Price Per Night: ${room.pricePerNight}</p>
                 <p>Available Rooms: {room.availableRooms}</p>
                 <p>Amenities: {room.amenities.join(', ')}</p>
                 <div className="flex space-x-2 mt-2">
@@ -124,6 +116,12 @@ export default function HotelDetailPage() {
                       className="w-20 h-20 object-cover rounded"
                     />
                   ))}
+                </div>
+                {/* "Book Now" Button */}
+                <div className="mt-4">
+                  <Link href={`/bookings?hotelId=${hotel.id}&roomId=${room.id}`}>
+                    <button className="btn btn-primary">Book Now</button>
+                  </Link>
                 </div>
               </div>
             ))}
