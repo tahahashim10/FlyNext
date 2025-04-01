@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { uploadImage } from '@/utils/uploadImage';
 
 interface Hotel {
   id: number;
@@ -19,14 +20,16 @@ export default function EditHotelPage() {
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    logo: '',
+    logo: '', // holds the uploaded logo URL
     address: '',
     location: '',
     starRating: '',
-    images: ''
+    images: [] as string[],
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -45,7 +48,7 @@ export default function EditHotelPage() {
             address: data.address || '',
             location: data.location || '',
             starRating: data.starRating?.toString() || '',
-            images: data.images?.join(', ') || ''
+            images: data.images || [],
           });
         }
       } catch (err: any) {
@@ -59,6 +62,54 @@ export default function EditHotelPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handler for logo upload
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadingLogo(true);
+      try {
+        const file = e.target.files[0];
+        const uploadedUrl = await uploadImage(file);
+        setFormData((prev) => ({ ...prev, logo: uploadedUrl }));
+      } catch (err: any) {
+        console.error('Error uploading logo:', err);
+        setError('Failed to upload logo.');
+      } finally {
+        setUploadingLogo(false);
+      }
+    }
+  };
+
+  // Handler to upload additional images (max 5 total)
+  const handleImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const currentCount = formData.images.length;
+      const availableSlots = 5 - currentCount;
+      if (availableSlots <= 0) {
+        setError('Maximum of 5 images allowed.');
+        return;
+      }
+      setUploadingImages(true);
+      try {
+        const files = Array.from(e.target.files).slice(0, availableSlots);
+        const uploadedUrls = await Promise.all(files.map((file) => uploadImage(file)));
+        setFormData((prev) => ({ ...prev, images: [...prev.images, ...uploadedUrls] }));
+      } catch (err: any) {
+        console.error('Error uploading images:', err);
+        setError('Failed to upload images.');
+      } finally {
+        setUploadingImages(false);
+      }
+    }
+  };
+
+  // Handler to remove an image by index
+  const handleRemoveImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -69,21 +120,21 @@ export default function EditHotelPage() {
       address: formData.address,
       location: formData.location,
       starRating: Number(formData.starRating),
-      images: formData.images.split(',').map((img: string) => img.trim()).filter(Boolean)
+      images: formData.images,
     };
     try {
       const res = await fetch(`/api/hotels/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Failed to update hotel');
       } else {
         setSuccess('Hotel updated successfully');
-        // Optionally, refresh hotel details
+        // Optionally, refresh hotel details here
       }
     } catch (err: any) {
       setError('Error updating hotel');
@@ -96,7 +147,7 @@ export default function EditHotelPage() {
     try {
       const res = await fetch(`/api/hotels/${id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!res.ok) {
         const data = await res.json();
@@ -127,14 +178,25 @@ export default function EditHotelPage() {
           className="input input-bordered w-full"
           required
         />
-        <input
-          type="url"
-          name="logo"
-          placeholder="Logo URL"
-          value={formData.logo}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+        {/* Hotel Logo Upload */}
+        <div>
+          <label className="block mb-1">Hotel Logo</label>
+          <input
+            type="file"
+            name="logo"
+            onChange={handleLogoChange}
+            className="input input-bordered w-full"
+            accept="image/*"
+          />
+          {uploadingLogo && <p>Uploading logo...</p>}
+          {formData.logo && (
+            <img
+              src={formData.logo}
+              alt="Hotel Logo Preview"
+              className="mt-2 w-20 h-20 object-cover rounded"
+            />
+          )}
+        </div>
         <input
           type="text"
           name="address"
@@ -164,15 +226,43 @@ export default function EditHotelPage() {
           min="0"
           max="5"
         />
-        <input
-          type="text"
-          name="images"
-          placeholder="Image URLs (comma separated)"
-          value={formData.images}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
-        <button type="submit" className="btn btn-primary w-full">Update Hotel</button>
+        {/* Hotel Images Upload */}
+        <div>
+          <label className="block mb-1">Hotel Images (max 5)</label>
+          <input
+            type="file"
+            name="images"
+            onChange={handleImagesChange}
+            className="input input-bordered w-full"
+            accept="image/*"
+            multiple
+            disabled={formData.images.length >= 5}
+          />
+          {uploadingImages && <p>Uploading images...</p>}
+          {formData.images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {formData.images.map((url, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={url}
+                    alt={`Hotel image ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <button type="submit" className="btn btn-primary w-full">
+          Update Hotel
+        </button>
       </form>
       <button onClick={handleDelete} className="btn btn-danger w-full mt-4">
         Delete Hotel
