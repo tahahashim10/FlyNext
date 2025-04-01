@@ -1,8 +1,10 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import OSMMap from './OSMMap';
+import { Calendar, MapPin, Star, Search, Users } from 'lucide-react';
 
 interface Hotel {
   id: number;
@@ -60,6 +62,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
   const [results, setResults] = useState<SearchResults | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,103 +102,176 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="space-y-4 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="input input-bordered w-full"
-            required
-          />
-          <input
-            type="date"
-            placeholder="Check-in"
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
-            className="input input-bordered w-full"
-            required
-          />
-          <input
-            type="date"
-            placeholder="Check-out"
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="Hotel Name (optional)"
-            value={nameFilter}
-            onChange={(e) => setNameFilter(e.target.value)}
-            className="input input-bordered w-full"
-          />
-          <input
-            type="number"
-            placeholder="Star Rating (optional)"
-            value={starRating}
-            onChange={(e) => setStarRating(e.target.value)}
-            className="input input-bordered w-full"
-          />
-          <div className="flex space-x-2">
-            <input
-              type="number"
-              placeholder="Min Price"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="input input-bordered w-full"
-            />
-            <input
-              type="number"
-              placeholder="Max Price"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="input input-bordered w-full"
-            />
+    <div className="space-y-6">
+      <div className="bg-card rounded-xl shadow-md p-4 md:p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Where are you going?"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="input input-bordered w-full pl-10"
+                required
+              />
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <input
+                type="date"
+                placeholder="Check-in"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                className="input input-bordered w-full pl-10"
+                required
+              />
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <input
+                type="date"
+                placeholder="Check-out"
+                value={checkOut}
+                onChange={(e) => setCheckOut(e.target.value)}
+                className="input input-bordered w-full pl-10"
+                required
+              />
+            </div>
+            
+            <div>
+              <button type="submit" className="btn-primary w-full flex items-center justify-center">
+                <Search className="h-5 w-5 mr-2" />
+                Search
+              </button>
+            </div>
           </div>
-        </div>
-        {error && <div className="text-red-500">{error}</div>}
-        <button type="submit" className="btn btn-primary">
-          Search Hotels
-        </button>
-      </form>
+          
+          <div className="flex items-center justify-between">
+            <button 
+              type="button" 
+              onClick={() => setIsAdvancedSearch(!isAdvancedSearch)} 
+              className="text-sm text-primary hover:underline"
+            >
+              {isAdvancedSearch ? 'Hide' : 'Show'} advanced search options
+            </button>
+          </div>
+          
+          {isAdvancedSearch && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-border">
+              <input
+                type="text"
+                placeholder="Hotel Name"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                className="input input-bordered w-full"
+              />
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
+                  <Star className="h-5 w-5" />
+                </div>
+                <select
+                  value={starRating}
+                  onChange={(e) => setStarRating(e.target.value)}
+                  className="input input-bordered w-full pl-10 appearance-none"
+                >
+                  <option value="">Any Rating</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4+ Stars</option>
+                  <option value="3">3+ Stars</option>
+                  <option value="2">2+ Stars</option>
+                  <option value="1">1+ Stars</option>
+                </select>
+              </div>
+              
+              <div className="flex space-x-2">
+                <input
+                  type="number"
+                  placeholder="Min Price"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+                <input
+                  type="number"
+                  placeholder="Max Price"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm mt-4">
+              {error}
+            </div>
+          )}
+        </form>
+      </div>
+      
+      {/* Hotel search results section */}
       {results && (
-        <div className="p-4">
+        <div>
           <h2 className="text-xl font-bold mb-4">Hotel Results</h2>
           {results.results.length > 0 ? (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {results.results.map((hotel) => (
-                <div key={hotel.id} className="border p-4 rounded flex flex-col md:flex-row items-center gap-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold">{hotel.name}</h3>
-                    <p>{hotel.address}</p>
-                    <p>Star Rating: {hotel.starRating}</p>
-                    <p>Starting Price: {hotel.startingPrice}</p>
-                    <p>Location: {hotel.location}</p>
-                  </div>
-                  <div className="relative w-48 h-32 overflow-hidden">
+                <div key={hotel.id} className="card overflow-hidden transition-shadow hover:shadow-card">
+                  <div className="relative h-48">
                     {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
                       <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
                     ) : (
-                      <p>No map available.</p>
+                      <div className="w-full h-full bg-muted/20 flex items-center justify-center">
+                        <p>No map available</p>
+                      </div>
                     )}
+                    <div className="absolute top-2 right-2 bg-card/90 px-2 py-1 rounded-md text-sm font-medium">
+                      ${hotel.startingPrice}/night
+                    </div>
                   </div>
-                  {/* Pass along the selected check-in and check-out dates */}
-                  <div>
-                    <Link href={`/hotels/${hotel.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}>
-                      <button className="btn btn-secondary">View Details</button>
-                    </Link>
+                  
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">{hotel.name}</h3>
+                        <p className="text-muted text-sm">{hotel.address}</p>
+                        <p className="text-sm mt-1">{hotel.location}</p>
+                      </div>
+                      <div className="flex items-center bg-primary/10 text-primary px-2 py-1 rounded">
+                        <Star className="h-4 w-4 inline mr-1" />
+                        <span className="font-medium">{hotel.starRating}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Link 
+                        href={`/hotels/${hotel.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}
+                        className="btn-primary w-full block text-center"
+                      >
+                        View Details
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p>No hotels found.</p>
+            <div className="text-center py-10 border border-border rounded-lg">
+              <p className="text-lg text-muted">No hotels found matching your criteria.</p>
+              <p className="mt-2">Try adjusting your search filters.</p>
+            </div>
           )}
         </div>
       )}
