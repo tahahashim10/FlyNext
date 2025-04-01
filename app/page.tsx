@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -25,8 +24,8 @@ export default function HomePage() {
       </div>
 
       {/* Search container that overlaps hero and content */}
-      <div className="container mx-auto px-4 -mt-16 mb-10">
-        <div className="bg-card shadow-lg rounded-xl overflow-hidden">
+      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-30">
+        <div className="bg-card shadow-lg rounded-xl overflow-visible">
           {/* Tab navigation */}
           <div className="flex border-b border-border">
             <button
@@ -53,8 +52,8 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Tab content */}
-          <div className="p-6">
+          {/* Tab content - Modified to allow dropdown overflow */}
+          <div className="p-6 overflow-visible">
             {activeTab === 'flights' ? (
               <FlightSearchForm />
             ) : (
