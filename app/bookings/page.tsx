@@ -1,41 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Suggestions from '@/components/Suggestions';
+import HotelSuggestionsPanel from '@/components/HotelSuggestionsPanel';
+import RoomSuggestionsPanel from '@/components/RoomSuggestionsPanel';
+import FlightSuggestionsPanel from '@/components/FlightSuggestionsPanel';
 
 export default function BookingFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Pre-populate from query parameters (including flightIds)
+  // Pre-populate fields from query parameters if available.
   const preHotelId = searchParams.get('hotelId') || '';
   const preRoomId = searchParams.get('roomId') || '';
   const preCheckIn = searchParams.get('checkIn') || '';
   const preCheckOut = searchParams.get('checkOut') || '';
   const preFlightIds = searchParams.get('flightIds') || '';
+  const preDestinationCity = searchParams.get('destinationCity') || '';
 
   const [bookingData, setBookingData] = useState({
     hotelId: preHotelId,
     roomId: preRoomId,
     checkIn: preCheckIn,
     checkOut: preCheckOut,
-    // For flight suggestions
+    destinationCity: preDestinationCity,
     departureCity: '',
-    destinationCity: '',
-    // Flight booking fields – auto-filled from URL if available.
     flightIds: preFlightIds,
     firstName: '',
     lastName: '',
     email: '',
     passportNumber: ''
   });
-
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  // Toggle suggestion panels
   const [showHotelSuggestions, setShowHotelSuggestions] = useState(false);
+  const [showRoomSuggestions, setShowRoomSuggestions] = useState(false);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
+
+  const routerPush = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
@@ -47,8 +51,8 @@ export default function BookingFormPage() {
       roomId: '',
       checkIn: '',
       checkOut: '',
-      departureCity: '',
       destinationCity: '',
+      departureCity: '',
       flightIds: '',
       firstName: '',
       lastName: '',
@@ -63,7 +67,7 @@ export default function BookingFormPage() {
     setSuccess('');
     setLoading(true);
 
-    // Build payload using hotel booking fields if provided.
+    // Build payload based on provided details.
     const payload: any = {};
     if (bookingData.hotelId && bookingData.roomId) {
       payload.hotelId = Number(bookingData.hotelId);
@@ -73,7 +77,6 @@ export default function BookingFormPage() {
         payload.checkOut = bookingData.checkOut;
       }
     }
-    // Only add flight booking data if flightIds is non-empty.
     if (bookingData.flightIds.trim() !== '') {
       payload.flightIds = bookingData.flightIds
         .split(',')
@@ -85,7 +88,6 @@ export default function BookingFormPage() {
       payload.passportNumber = bookingData.passportNumber;
     }
 
-    // Debug: log payload
     console.log("Booking payload:", payload);
 
     if (!payload.hotelId && !payload.flightIds) {
@@ -109,7 +111,6 @@ export default function BookingFormPage() {
         setLoading(false);
       } else {
         const data = await res.json();
-        // Determine success message based on response keys
         if (data.flightBooking && data.hotelBooking) {
           setSuccess('Bookings added to your cart!');
         } else if (data.flightBooking || data.hotelBooking) {
@@ -136,30 +137,60 @@ export default function BookingFormPage() {
       {success && <p className="text-green-500 mb-2">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Hotel Booking Section */}
-        <div className="border p-4 rounded">
+        <div className="border p-4 rounded mb-4">
           <h3 className="font-semibold mb-2">Hotel Reservation (Optional)</h3>
           <div className="flex flex-col md:flex-row gap-2">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <label className="label">Hotel ID</label>
               <input
                 type="number"
                 name="hotelId"
                 value={bookingData.hotelId}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (!e.target.value) setShowHotelSuggestions(true);
+                  else setShowHotelSuggestions(false);
+                }}
                 className="input input-bordered w-full"
-                placeholder="Hotel ID"
+                placeholder="Enter Hotel ID or search by destination"
               />
+              {(!bookingData.hotelId || bookingData.hotelId === '') &&
+                bookingData.destinationCity.trim() !== '' &&
+                showHotelSuggestions && (
+                  <HotelSuggestionsPanel
+                    query={bookingData.destinationCity}
+                    onSelect={(selectedId) => {
+                      setBookingData({ ...bookingData, hotelId: selectedId.toString() });
+                      setShowHotelSuggestions(false);
+                    }}
+                  />
+                )}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <label className="label">Room ID</label>
               <input
                 type="number"
                 name="roomId"
                 value={bookingData.roomId}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (bookingData.hotelId && !e.target.value) setShowRoomSuggestions(true);
+                  else setShowRoomSuggestions(false);
+                }}
                 className="input input-bordered w-full"
-                placeholder="Room ID"
+                placeholder="Enter Room ID or select from available rooms"
               />
+              {bookingData.hotelId && ( !bookingData.roomId || bookingData.roomId === '') && bookingData.checkIn && bookingData.checkOut && (
+                <RoomSuggestionsPanel
+                  hotelId={Number(bookingData.hotelId)}
+                  checkIn={bookingData.checkIn}
+                  checkOut={bookingData.checkOut}
+                  onSelect={(selectedRoomId) =>
+                    setBookingData({ ...bookingData, roomId: selectedRoomId.toString() })
+                  }
+                />
+              )}
+
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-2 mt-2">
@@ -201,21 +232,21 @@ export default function BookingFormPage() {
             >
               Get Flight Suggestions
             </button>
-            {showFlightSuggestions && (
-              <Suggestions
-                type="flight"
-                query={bookingData.departureCity}
-                placeholder="Select a flight origin"
-                onSelect={(selected: string) =>
-                  setBookingData({ ...bookingData, departureCity: selected })
+            {showFlightSuggestions && bookingData.hotelId && bookingData.checkIn && (
+              <FlightSuggestionsPanel
+                hotelId={Number(bookingData.hotelId)}
+                suggestedDate={bookingData.checkIn}
+                departureCity={bookingData.departureCity}
+                onSelect={(selectedFlightId) =>
+                  setBookingData({ ...bookingData, flightIds: selectedFlightId })
                 }
               />
             )}
           </div>
         </div>
 
-        {/* Flight Booking Section (Optional) */}
-        <div className="border p-4 rounded">
+        {/* Flight Booking Section */}
+        <div className="border p-4 rounded mb-4">
           <h3 className="font-semibold mb-2">Flight Reservation (Optional)</h3>
           <label className="label">Flight IDs (comma separated)</label>
           <input
@@ -280,21 +311,15 @@ export default function BookingFormPage() {
               onChange={handleChange}
               className="input input-bordered w-full mb-2"
             />
-            <button
-              type="button"
-              onClick={() => setShowHotelSuggestions(!showHotelSuggestions)}
-              className="btn btn-secondary btn-sm"
-            >
-              Get Hotel Suggestions
-            </button>
-            {showHotelSuggestions && (
-              <Suggestions
-                type="hotel"
+            {bookingData.destinationCity.trim() !== '' && showHotelSuggestions && (
+              <HotelSuggestionsPanel
                 query={bookingData.destinationCity}
-                placeholder="Select a destination city"
-                onSelect={(selected: string) =>
-                  setBookingData({ ...bookingData, destinationCity: selected })
-                }
+                onSelect={(selectedId) => {
+                  // Here you might auto‑fill a hidden field or update state
+                  // For example, clear the destinationCity input since the suggestion was selected:
+                  setBookingData({ ...bookingData, destinationCity: '' });
+                  setShowHotelSuggestions(false);
+                }}
               />
             )}
           </div>
