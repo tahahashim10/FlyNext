@@ -1,50 +1,193 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import FlightSearchForm from '../components/FlightSearchForm';
 import HotelSearchForm from '../components/HotelSearchForm';
+import { Plane, Hotel } from 'lucide-react';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights');
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-10">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-5xl">
-        {/* Tab Buttons */}
-        <div className="flex justify-center border-b mb-6">
-          <button
-            className={`px-6 py-3 text-lg font-medium focus:outline-none ${
-              activeTab === 'flights' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'
-            }`}
-            onClick={() => setActiveTab('flights')}
-          >
-            Flights
-          </button>
-          <button
-            className={`px-6 py-3 text-lg font-medium focus:outline-none ${
-              activeTab === 'hotels' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'
-            }`}
-            onClick={() => setActiveTab('hotels')}
-          >
-            Hotels
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div>
-          {activeTab === 'flights' ? (
-            <>
-              <h2 className="text-xl font-semibold mb-4 text-center">Search Flights</h2>
-              <FlightSearchForm />
-            </>
-          ) : (
-            <>
-              <h2 className="text-xl font-semibold mb-4 text-center">Search Hotels</h2>
-              <HotelSearchForm />
-            </>
-          )}
+    <div className="min-h-screen flex flex-col">
+      {/* Hero section with background image */}
+      <div className="relative h-[50vh] lg:h-[60vh] w-full bg-gradient-to-r from-secondary to-primary/40">
+        <div className="absolute inset-0 bg-[url('/hero-travel.jpg')] bg-cover bg-center mix-blend-overlay opacity-60"></div>
+        <div className="container mx-auto h-full flex flex-col justify-center items-center text-white px-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-center">
+            Find your perfect journey with FlyNext
+          </h1>
+          <p className="text-lg md:text-xl mt-4 text-center max-w-2xl">
+            Search and book hotels and flights around the world with our easy-to-use platform
+          </p>
         </div>
       </div>
+
+      {/* Search container that overlaps hero and content */}
+      <div className="container mx-auto px-4 -mt-16 mb-10">
+        <div className="bg-card shadow-lg rounded-xl overflow-hidden">
+          {/* Tab navigation */}
+          <div className="flex border-b border-border">
+            <button
+              onClick={() => setActiveTab('flights')}
+              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
+                activeTab === 'flights' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted hover:text-foreground'
+              }`}
+            >
+              <Plane className="mr-2 h-5 w-5" />
+              Flights
+            </button>
+            <button
+              onClick={() => setActiveTab('hotels')}
+              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
+                activeTab === 'hotels' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted hover:text-foreground'
+              }`}
+            >
+              <Hotel className="mr-2 h-5 w-5" />
+              Hotels
+            </button>
+          </div>
+
+          {/* Tab content */}
+          <div className="p-6">
+            {activeTab === 'flights' ? (
+              <FlightSearchForm />
+            ) : (
+              <HotelSearchForm />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Feature sections */}
+      <div className="container mx-auto py-12 px-4">
+        <h2 className="text-2xl font-bold text-center mb-12">Why book with FlyNext?</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center p-6 rounded-lg border border-border hover:shadow-card transition-shadow">
+            <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-primary">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Best Price Guarantee</h3>
+            <p className="text-muted">Find a lower price? We'll match it and give you an additional discount.</p>
+          </div>
+          
+          <div className="text-center p-6 rounded-lg border border-border hover:shadow-card transition-shadow">
+            <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-primary">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Secure Booking</h3>
+            <p className="text-muted">Your payment and personal information are always protected with us.</p>
+          </div>
+          
+          <div className="text-center p-6 rounded-lg border border-border hover:shadow-card transition-shadow">
+            <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-primary">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">24/7 Support</h3>
+            <p className="text-muted">Our friendly customer service team is available around the clock to help you.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Destinations section */}
+      <div className="bg-muted/5 py-12">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold text-center mb-10">Popular Destinations</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
+              <img src="/paris.jpg" alt="Paris" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <h3 className="font-semibold text-lg">Paris</h3>
+                <p className="text-sm text-white/80">France</p>
+              </div>
+            </div>
+            
+            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
+              <img src="/new-york.jpg" alt="New York" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <h3 className="font-semibold text-lg">New York</h3>
+                <p className="text-sm text-white/80">United States</p>
+              </div>
+            </div>
+            
+            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
+              <img src="/tokyo.jpg" alt="Tokyo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <h3 className="font-semibold text-lg">Tokyo</h3>
+                <p className="text-sm text-white/80">Japan</p>
+              </div>
+            </div>
+            
+            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
+              <img src="/dubai.jpg" alt="Dubai" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                <h3 className="font-semibold text-lg">Dubai</h3>
+                <p className="text-sm text-white/80">United Arab Emirates</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer (could be moved to a separate component) */}
+      <footer className="bg-card border-t border-border mt-auto">
+        <div className="container mx-auto py-10 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-bold text-lg mb-4">FlyNext</h3>
+              <p className="text-muted">Your trusted travel companion for hotels and flights worldwide.</p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted hover:text-primary">Search Hotels</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">Search Flights</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">My Bookings</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted hover:text-primary">Help Center</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">Contact Us</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">FAQs</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-muted hover:text-primary">Terms & Conditions</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">Privacy Policy</a></li>
+                <li><a href="#" className="text-muted hover:text-primary">Cookie Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border mt-8 pt-8 text-sm text-center text-muted">
+            <p>&copy; {new Date().getFullYear()} FlyNext. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
