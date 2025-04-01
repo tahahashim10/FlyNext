@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { uploadImage } from '../utils/uploadImage';
 
 interface ProfileFormProps {
   user: {
@@ -28,6 +29,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      try {
+        const uploadedUrl = await uploadImage(e.target.files[0]);
+        setFormData((prev) => ({ ...prev, profilePicture: uploadedUrl }));
+      } catch (err: any) {
+        console.error("Image upload error:", err);
+        setError("Failed to upload image.");
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,14 +94,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
           className="input input-bordered w-full"
           placeholder="Phone Number"
         />
+        {/* File input for profile picture */}
         <input
-          type="url"
+          type="file"
           name="profilePicture"
-          value={formData.profilePicture}
-          onChange={handleChange}
+          onChange={handleFileChange}
           className="input input-bordered w-full"
-          placeholder="Profile Picture URL"
+          accept="image/*"
         />
+        {formData.profilePicture && (
+          <img
+            src={formData.profilePicture}
+            alt="Profile Preview"
+            className="mt-2 w-20 h-20 rounded-full object-cover"
+          />
+        )}
         <button type="submit" className="btn btn-primary w-full">
           Update Profile
         </button>

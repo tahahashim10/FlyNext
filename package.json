@@ -12,6 +12,7 @@
   "dependencies": {
     "@prisma/client": "^6.4.0",
     "bcrypt": "^5.1.1",
+    "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "next": "15.1.7",
