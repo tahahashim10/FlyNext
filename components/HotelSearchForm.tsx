@@ -185,9 +185,9 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                       <p>No map available.</p>
                     )}
                   </div>
-
+                  {/* Pass along the selected check-in and check-out dates */}
                   <div>
-                    <Link href={`/hotels/${hotel.id}`}>
+                    <Link href={`/hotels/${hotel.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}>
                       <button className="btn btn-secondary">View Details</button>
                     </Link>
                   </div>

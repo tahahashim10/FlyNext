@@ -8,7 +8,7 @@ export default function BookingFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Pre-populate from query
+  // Pre-populate from query parameters
   const preHotelId = searchParams.get('hotelId') || '';
   const preRoomId = searchParams.get('roomId') || '';
   const preCheckIn = searchParams.get('checkIn') || '';
@@ -22,7 +22,7 @@ export default function BookingFormPage() {
     // For flight suggestions
     departureCity: '',
     destinationCity: '',
-    // Actual flight booking data
+    // Flight booking fields
     flightIds: '',
     firstName: '',
     lastName: '',
@@ -32,6 +32,7 @@ export default function BookingFormPage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
   const [showHotelSuggestions, setShowHotelSuggestions] = useState(false);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
 
@@ -39,15 +40,30 @@ export default function BookingFormPage() {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
   };
 
+  const clearForm = () => {
+    setBookingData({
+      hotelId: '',
+      roomId: '',
+      checkIn: '',
+      checkOut: '',
+      departureCity: '',
+      destinationCity: '',
+      flightIds: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      passportNumber: ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
-    // Build the payload
+    // Build payload using hotel booking fields if provided.
     const payload: any = {};
-
-    // If the user has a valid hotel ID & room ID, add hotel booking data
     if (bookingData.hotelId && bookingData.roomId) {
       payload.hotelId = Number(bookingData.hotelId);
       payload.roomId = Number(bookingData.roomId);
@@ -56,9 +72,8 @@ export default function BookingFormPage() {
         payload.checkOut = bookingData.checkOut;
       }
     }
-
-    // If flight IDs were entered, add flight booking data
-    if (bookingData.flightIds.trim()) {
+    // Only add flight booking data if flightIds is non-empty.
+    if (bookingData.flightIds.trim() !== '') {
       payload.flightIds = bookingData.flightIds
         .split(',')
         .map((id) => id.trim())
@@ -69,7 +84,9 @@ export default function BookingFormPage() {
       payload.passportNumber = bookingData.passportNumber;
     }
 
-    // If neither hotel nor flight data is provided, show an error
+    // Debug: log payload
+    console.log("Booking payload:", payload);
+
     if (!payload.hotelId && !payload.flightIds) {
       setError('Please provide either hotel or flight booking details.');
       setLoading(false);
@@ -86,26 +103,26 @@ export default function BookingFormPage() {
 
       if (!res.ok) {
         const data = await res.json();
+        console.error("Error response:", data);
         setError(data.error || 'Failed to create booking');
         setLoading(false);
       } else {
         const data = await res.json();
-        let booking, bookingType;
-        if (data.flightBooking) {
-          booking = data.flightBooking;
-          bookingType = 'flight';
-        } else if (data.hotelBooking) {
-          booking = data.hotelBooking;
-          bookingType = 'hotel';
+        // Determine success message based on response keys
+        if (data.flightBooking && data.hotelBooking) {
+          setSuccess('Bookings added to your cart!');
+        } else if (data.flightBooking || data.hotelBooking) {
+          setSuccess('Booking added to your cart!');
         } else {
           setError('Unexpected booking response');
           setLoading(false);
           return;
         }
-        // Go to checkout with bookingId, bookingType
-        router.push(`/checkout?bookingId=${booking.id}&bookingType=${bookingType}`);
+        clearForm();
+        setLoading(false);
       }
     } catch (err: any) {
+      console.error("Booking submission error:", err);
       setError('Error creating booking');
       setLoading(false);
     }
@@ -115,7 +132,7 @@ export default function BookingFormPage() {
     <div className="max-w-3xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Book Your Itinerary</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
-
+      {success && <p className="text-green-500 mb-2">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Hotel Booking Section */}
         <div className="border p-4 rounded">
@@ -188,15 +205,15 @@ export default function BookingFormPage() {
                 type="flight"
                 query={bookingData.departureCity}
                 placeholder="Select a flight origin"
-                onSelect={(selected: string) => {
-                  setBookingData({ ...bookingData, departureCity: selected });
-                }}
+                onSelect={(selected: string) =>
+                  setBookingData({ ...bookingData, departureCity: selected })
+                }
               />
             )}
           </div>
         </div>
 
-        {/* Flight Booking Section */}
+        {/* Flight Booking Section (Optional) */}
         <div className="border p-4 rounded">
           <h3 className="font-semibold mb-2">Flight Reservation (Optional)</h3>
           <label className="label">Flight IDs (comma separated)</label>
@@ -273,10 +290,10 @@ export default function BookingFormPage() {
               <Suggestions
                 type="hotel"
                 query={bookingData.destinationCity}
-                placeholder="Select a city for hotel suggestions"
-                onSelect={(selected: string) => {
-                  setBookingData({ ...bookingData, destinationCity: selected });
-                }}
+                placeholder="Select a destination city"
+                onSelect={(selected: string) =>
+                  setBookingData({ ...bookingData, destinationCity: selected })
+                }
               />
             )}
           </div>

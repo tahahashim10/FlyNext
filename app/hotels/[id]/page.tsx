@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OSMMap from '../../../components/OSMMap';
@@ -31,7 +31,12 @@ interface RoomType {
 
 export default function HotelDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const hotelId = params?.id;
+  // Read checkIn and checkOut from the query parameters
+  const preCheckIn = searchParams.get('checkIn') || '';
+  const preCheckOut = searchParams.get('checkOut') || '';
+
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,9 +122,11 @@ export default function HotelDetailPage() {
                     />
                   ))}
                 </div>
-                {/* "Book Now" Button */}
+                {/* "Book Now" Button with pre-populated checkIn and checkOut */}
                 <div className="mt-4">
-                  <Link href={`/bookings?hotelId=${hotel.id}&roomId=${room.id}`}>
+                  <Link
+                    href={`/bookings?hotelId=${hotel.id}&roomId=${room.id}&checkIn=${encodeURIComponent(preCheckIn)}&checkOut=${encodeURIComponent(preCheckOut)}`}
+                  >
                     <button className="btn btn-primary">Book Now</button>
                   </Link>
                 </div>
