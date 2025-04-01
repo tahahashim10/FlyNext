@@ -8,11 +8,12 @@ export default function BookingFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Pre-populate from query parameters
+  // Pre-populate from query parameters (including flightIds)
   const preHotelId = searchParams.get('hotelId') || '';
   const preRoomId = searchParams.get('roomId') || '';
   const preCheckIn = searchParams.get('checkIn') || '';
   const preCheckOut = searchParams.get('checkOut') || '';
+  const preFlightIds = searchParams.get('flightIds') || '';
 
   const [bookingData, setBookingData] = useState({
     hotelId: preHotelId,
@@ -22,8 +23,8 @@ export default function BookingFormPage() {
     // For flight suggestions
     departureCity: '',
     destinationCity: '',
-    // Flight booking fields
-    flightIds: '',
+    // Flight booking fields – auto-filled from URL if available.
+    flightIds: preFlightIds,
     firstName: '',
     lastName: '',
     email: '',
