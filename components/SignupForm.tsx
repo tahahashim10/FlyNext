@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { uploadImage } from '../utils/uploadImage';
 
 const SignupForm: React.FC = () => {
   const { register } = useAuth();
@@ -13,13 +14,25 @@ const SignupForm: React.FC = () => {
     email: '',
     password: '',
     phoneNumber: '',
-    profilePicture: '',
+    profilePicture: '', // Will store the URL returned from ImageKit
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      try {
+        const uploadedUrl = await uploadImage(e.target.files[0]);
+        setFormData((prev) => ({ ...prev, profilePicture: uploadedUrl }));
+      } catch (err: any) {
+        console.error("Image upload error:", err);
+        setError("Failed to upload image.");
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +42,6 @@ const SignupForm: React.FC = () => {
     try {
       await register(formData);
       setSuccess('Sign up successful! Redirecting to your profile...');
-      // Redirect after a short delay
       setTimeout(() => {
         router.push('/profile');
       }, 2000);
@@ -88,14 +100,21 @@ const SignupForm: React.FC = () => {
           onChange={handleChange}
           className="input input-bordered w-full"
         />
+        {/* File input for profile picture */}
         <input
-          type="url"
+          type="file"
           name="profilePicture"
-          placeholder="Profile Picture URL"
-          value={formData.profilePicture}
-          onChange={handleChange}
+          onChange={handleFileChange}
           className="input input-bordered w-full"
+          accept="image/*"
         />
+        {formData.profilePicture && (
+          <img
+            src={formData.profilePicture}
+            alt="Profile Preview"
+            className="mt-2 w-20 h-20 rounded-full object-cover"
+          />
+        )}
         <button type="submit" className="btn btn-primary w-full">
           Sign Up
         </button>
