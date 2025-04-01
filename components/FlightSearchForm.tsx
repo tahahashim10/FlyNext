@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Suggestion {
   label: string;
   value: string;
 }
 
-interface Flight {
+export interface Flight {
   id: string;
   flightNumber: string;
   departureTime: string;
@@ -46,6 +47,7 @@ interface FlightSearchResults {
 }
 
 const FlightSearchForm: React.FC = () => {
+  const router = useRouter();
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [departureDate, setDepartureDate] = useState('');
@@ -56,7 +58,7 @@ const FlightSearchForm: React.FC = () => {
   const [results, setResults] = useState<FlightSearchResults | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch suggestions from backend endpoints and return objects with label and value.
+  // Fetch suggestions from the backend endpoints.
   const fetchSuggestions = async (query: string): Promise<Suggestion[]> => {
     try {
       const [citiesRes, airportsRes] = await Promise.all([
@@ -67,21 +69,20 @@ const FlightSearchForm: React.FC = () => {
         console.error('Failed to fetch suggestions.');
         return [];
       }
-      const cities = await citiesRes.json(); // e.g. [{ city: 'Atlanta', country: 'United States' }, ...]
-      const airports = await airportsRes.json(); // e.g. [{ code: 'ATL', name: 'Hartsfield–Jackson Atlanta International Airport', city: 'Atlanta', country: 'United States' }, ...]
+      const cities = await citiesRes.json();
+      const airports = await airportsRes.json();
 
-      // For cities, use city name as value.
+      // Map cities and airports to suggestion objects.
       const citySuggestions: Suggestion[] = cities.map((c: any) => ({
         label: `${c.city}, ${c.country}`,
-        value: c.city, // or use a specific city code if available
+        value: c.city,
       }));
-      // For airports, use airport code as value.
       const airportSuggestions: Suggestion[] = airports.map((a: any) => ({
         label: `${a.name} (${a.code})`,
         value: a.code,
       }));
-      const combined = [...citySuggestions, ...airportSuggestions];
 
+      const combined = [...citySuggestions, ...airportSuggestions];
       return combined.filter((item: Suggestion) =>
         item.label.toLowerCase().includes(query.toLowerCase())
       );
@@ -91,7 +92,7 @@ const FlightSearchForm: React.FC = () => {
     }
   };
 
-  // Auto-complete for origin
+  // Auto-complete for origin.
   const handleOriginChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setOrigin(value);
@@ -103,7 +104,7 @@ const FlightSearchForm: React.FC = () => {
     }
   };
 
-  // Auto-complete for destination
+  // Auto-complete for destination.
   const handleDestinationChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setDestination(value);
@@ -120,7 +121,6 @@ const FlightSearchForm: React.FC = () => {
     setError(null);
     setResults(null);
 
-    // Ensure values are set (they should be the underlying values, not the full labels)
     if (!origin || !destination || !departureDate) {
       setError('Please fill in origin, destination, and departure date.');
       return;
@@ -166,7 +166,7 @@ const FlightSearchForm: React.FC = () => {
                     key={idx}
                     className="p-2 hover:bg-gray-200 cursor-pointer"
                     onClick={() => {
-                      setOrigin(sugg.value); // store the underlying value (e.g., "DFW")
+                      setOrigin(sugg.value);
                       setOriginSuggestions([]);
                     }}
                   >
@@ -193,7 +193,7 @@ const FlightSearchForm: React.FC = () => {
                     key={idx}
                     className="p-2 hover:bg-gray-200 cursor-pointer"
                     onClick={() => {
-                      setDestination(sugg.value); // store the underlying value
+                      setDestination(sugg.value);
                       setDestinationSuggestions([]);
                     }}
                   >
@@ -254,12 +254,13 @@ const FlightSearchForm: React.FC = () => {
           Search Flights
         </button>
       </form>
+
       {results && (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Flight Results</h2>
           {results.flightThere?.results?.length ? (
             <div className="space-y-4">
-              {results.flightThere.results.map((group: any, index: number) => (
+              {results.flightThere.results.map((group, index: number) => (
                 <div key={index} className="border p-4 rounded">
                   <p className="font-bold">Flight Group {index + 1}</p>
                   {group.flights.map((flight: Flight) => (
@@ -278,6 +279,14 @@ const FlightSearchForm: React.FC = () => {
                       {flight.layovers && (
                         <p>Layovers: {JSON.stringify(flight.layovers)}</p>
                       )}
+                      <button
+                        className="btn btn-primary mt-2"
+                        onClick={() =>
+                          router.push(`/bookings?flightIds=${encodeURIComponent(flight.id)}`)
+                        }
+                      >
+                        Book Now
+                      </button>
                     </div>
                   ))}
                 </div>
