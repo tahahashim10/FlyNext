@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -106,45 +105,51 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
       <div className="bg-card rounded-xl shadow-md p-4 md:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
-                <MapPin className="h-5 w-5" />
+            {/* City input - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
+                <MapPin className="h-5 w-5 text-muted" />
               </div>
               <input
                 type="text"
                 placeholder="Where are you going?"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
             </div>
             
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
-                <Calendar className="h-5 w-5" />
+            {/* Check-in date input - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
+                <Calendar className="h-5 w-5 text-muted" />
               </div>
               <input
                 type="date"
                 placeholder="Check-in"
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
             </div>
             
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
-                <Calendar className="h-5 w-5" />
+            {/* Check-out date input - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
+                <Calendar className="h-5 w-5 text-muted" />
               </div>
               <input
                 type="date"
                 placeholder="Check-out"
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
             </div>
             
@@ -176,14 +181,15 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 className="input input-bordered w-full"
               />
               
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted z-10">
-                  <Star className="h-5 w-5" />
+              <div className="relative flex items-center">
+                <div className="absolute left-3 flex items-center pointer-events-none z-10">
+                  <Star className="h-5 w-5 text-muted" />
                 </div>
                 <select
                   value={starRating}
                   onChange={(e) => setStarRating(e.target.value)}
-                  className="input input-bordered w-full pl-10 appearance-none"
+                  className="input input-bordered w-full pl-16 focus:pl-16 appearance-none"
+                  style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
                 >
                   <option value="">Any Rating</option>
                   <option value="5">5 Stars</option>

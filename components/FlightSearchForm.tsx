@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -144,6 +143,7 @@ const FlightSearchForm: React.FC = () => {
       } else {
         const data = await res.json();
         setResults(data);
+        console.log("Flight results:", data); // Log results to see the structure
       }
     } catch (err: any) {
       setError('Error fetching flights');
@@ -171,9 +171,28 @@ const FlightSearchForm: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
+  // Get origin and destination display text
+  const getOriginText = (flight: Flight) => {
+    if (flight.origin && typeof flight.origin === 'object') {
+      const city = flight.origin.city || origin;
+      const code = flight.origin.code || "";
+      return `${city}${code ? ` (${code})` : ""}`;
+    }
+    return origin;
+  };
+
+  const getDestinationText = (flight: Flight) => {
+    if (flight.destination && typeof flight.destination === 'object') {
+      const city = flight.destination.city || destination;
+      const code = flight.destination.code || "";
+      return `${city}${code ? ` (${code})` : ""}`;
+    }
+    return destination;
+  };
+
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-xl shadow-md p-4 md:p-6">
+      <div className="bg-card rounded-xl shadow-md p-4 md:p-6 relative">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center space-x-4 mb-4">
             <label className="inline-flex items-center cursor-pointer">
@@ -204,9 +223,9 @@ const FlightSearchForm: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Origin Input with Suggestions */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            {/* Origin Input with Suggestions - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <Plane className="h-5 w-5 text-muted transform -rotate-45" />
               </div>
               <input
@@ -214,11 +233,12 @@ const FlightSearchForm: React.FC = () => {
                 placeholder="From: City or Airport"
                 value={origin}
                 onChange={handleOriginChange}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
               {originSuggestions.length > 0 && (
-                <ul className="absolute z-10 w-full mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border">
+                <ul className="absolute z-50 w-full mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border" style={{ top: '100%', left: 0 }}>
                   {originSuggestions.map((sugg, idx) => (
                     <li
                       key={idx}
@@ -235,9 +255,9 @@ const FlightSearchForm: React.FC = () => {
               )}
             </div>
             
-            {/* Destination Input with Suggestions */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            {/* Destination Input with Suggestions - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <Plane className="h-5 w-5 text-muted transform rotate-45" />
               </div>
               <input
@@ -245,54 +265,60 @@ const FlightSearchForm: React.FC = () => {
                 placeholder="To: City or Airport"
                 value={destination}
                 onChange={handleDestinationChange}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
               {destinationSuggestions.length > 0 && (
-                <ul className="absolute z-10 w-full mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border">
-                  {destinationSuggestions.map((sugg, idx) => (
-                    <li
-                      key={idx}
-                      className="px-4 py-2 hover:bg-muted/10 cursor-pointer"
-                      onClick={() => {
-                        setDestination(sugg.value);
-                        setDestinationSuggestions([]);
-                      }}
-                    >
-                      {sugg.label}
-                    </li>
-                  ))}
-                </ul>
+                <div className="absolute w-full" style={{ top: '100%', left: 0 }}>
+                  <ul className="z-[9999] mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border w-full">
+                    {destinationSuggestions.map((sugg, idx) => (
+                      <li
+                        key={idx}
+                        className="px-4 py-2 hover:bg-muted/10 cursor-pointer"
+                        onClick={() => {
+                          setDestination(sugg.value);
+                          setDestinationSuggestions([]);
+                        }}
+                      >
+                        {sugg.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            {/* Date Input - Fixed icon positioning */}
+            <div className="relative flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <Calendar className="h-5 w-5 text-muted" />
               </div>
               <input
                 type="date"
                 value={departureDate}
                 onChange={(e) => setDepartureDate(e.target.value)}
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-16 focus:pl-16"
                 required
                 min={new Date().toISOString().split('T')[0]}
+                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
             </div>
             
             {tripType === 'round-trip' && (
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <div className="relative flex items-center">
+                <div className="absolute left-3 flex items-center pointer-events-none z-10">
                   <Calendar className="h-5 w-5 text-muted" />
                 </div>
                 <input
                   type="date"
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
-                  className="input input-bordered w-full pl-10"
+                  className="input input-bordered w-full pl-16 focus:pl-16"
                   min={departureDate || new Date().toISOString().split('T')[0]}
+                  style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
                 />
               </div>
             )}
@@ -346,22 +372,21 @@ const FlightSearchForm: React.FC = () => {
                       <div className="flex flex-col md:flex-row md:items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
-                            <span className="font-semibold">{flight.flightNumber}</span>
+                            <span className="font-semibold">{flight.flightNumber || `Flight ${flightIndex + 1}`}</span>
                             <span className="mx-2 text-muted">•</span>
                             <span className="text-sm text-muted">
-                              {flight.origin?.city || "N/A"} ({flight.origin?.code || "N/A"}) → {flight.destination?.city || "N/A"} ({flight.destination?.code || "N/A"})
+                              {getOriginText(flight)} → {getDestinationText(flight)}
                             </span>
-
                           </div>
                           
                           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div className="flex items-center">
                               <div className="text-lg font-semibold">{new Date(flight.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                              <div className="mx-3 flex-1 border-t border-dashed border-muted relative">
-                                <div className="absolute -top-2 left-0">
+                              <div className="mx-3 flex-1 border-t border-dashed border-muted relative" style={{ minWidth: '80px' }}>
+                                <div className="absolute -top-2 left-2">
                                   <Plane size={16} className="text-primary" />
                                 </div>
-                                <div className="absolute -top-2.5 right-0">
+                                <div className="absolute -top-2.5 right-2">
                                   <MapPin size={16} className="text-muted" />
                                 </div>
                               </div>
@@ -389,7 +414,7 @@ const FlightSearchForm: React.FC = () => {
                         
                         <div className="mt-4 md:mt-0 md:ml-4 flex flex-col items-end">
                           <div className="text-lg font-semibold mb-2">
-                            {flight.price} {flight.currency}
+                            {flight.price} {flight.currency || "USD"}
                           </div>
                           <button
                             className="btn-primary"
@@ -439,22 +464,21 @@ const FlightSearchForm: React.FC = () => {
                           <div className="flex flex-col md:flex-row md:items-center justify-between">
                             <div className="flex-1">
                               <div className="flex items-center mb-2">
-                                <span className="font-semibold">{flight.flightNumber}</span>
+                                <span className="font-semibold">{flight.flightNumber || `Flight ${flightIndex + 1}`}</span>
                                 <span className="mx-2 text-muted">•</span>
                                 <span className="text-sm text-muted">
-                                  {flight.origin?.city || "N/A"} ({flight.origin?.code || "N/A"}) → {flight.destination?.city || "N/A"} ({flight.destination?.code || "N/A"})
+                                  {getOriginText(flight)} → {getDestinationText(flight)}
                                 </span>
-
                               </div>
                               
                               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                 <div className="flex items-center">
                                   <div className="text-lg font-semibold">{new Date(flight.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                                  <div className="mx-3 flex-1 border-t border-dashed border-muted relative">
-                                    <div className="absolute -top-2 left-0">
+                                  <div className="mx-3 flex-1 border-t border-dashed border-muted relative" style={{ minWidth: '80px' }}>
+                                    <div className="absolute -top-2 left-2">
                                       <Plane size={16} className="text-primary" />
                                     </div>
-                                    <div className="absolute -top-2.5 right-0">
+                                    <div className="absolute -top-2.5 right-2">
                                       <MapPin size={16} className="text-muted" />
                                     </div>
                                   </div>
@@ -482,7 +506,7 @@ const FlightSearchForm: React.FC = () => {
                             
                             <div className="mt-4 md:mt-0 md:ml-4 flex flex-col items-end">
                               <div className="text-lg font-semibold mb-2">
-                                {flight.price} {flight.currency}
+                                {flight.price} {flight.currency || "USD"}
                               </div>
                               <button
                                 className="btn-primary"
