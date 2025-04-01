@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { uploadImage } from '@/utils/uploadImage';
 
 export default function AddRoomTypePage() {
   const { id: hotelId } = useParams();
@@ -9,30 +10,74 @@ export default function AddRoomTypePage() {
     name: '',
     amenities: '',
     pricePerNight: '',
-    images: '',
+    images: [] as string[],
     availableRooms: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [uploading, setUploading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handler to upload room images with a maximum of 5 images
+  const handleImagesChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const currentCount = formData.images.length;
+      const availableSlots = 5 - currentCount;
+      if (availableSlots <= 0) {
+        setError('Maximum of 5 images allowed.');
+        return;
+      }
+      setUploading(true);
+      try {
+        const files = Array.from(e.target.files).slice(0, availableSlots);
+        const uploadedUrls = await Promise.all(
+          files.map((file) => uploadImage(file))
+        );
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, ...uploadedUrls]
+        }));
+      } catch (err: any) {
+        console.error('Error uploading images:', err);
+        setError('Failed to upload images.');
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  // Handler to remove a specific image
+  const handleRemoveImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
+
     const payload = {
       hotelId: Number(hotelId),
       name: formData.name,
-      amenities: formData.amenities.split(',').map(item => item.trim()).filter(Boolean),
+      amenities: formData.amenities
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
       pricePerNight: Number(formData.pricePerNight),
-      images: formData.images.split(',').map(item => item.trim()).filter(Boolean),
+      images: formData.images,
       availableRooms: Number(formData.availableRooms)
     };
-    
+
     try {
       const res = await fetch('/api/roomTypes', {
         method: 'POST',
@@ -45,12 +90,12 @@ export default function AddRoomTypePage() {
         setError(data.error || 'Failed to add room type');
       } else {
         setSuccess('Room type added successfully!');
-        // Clear the form
+        // Clear the form after success
         setFormData({
           name: '',
           amenities: '',
           pricePerNight: '',
-          images: '',
+          images: [],
           availableRooms: ''
         });
       }
@@ -91,14 +136,40 @@ export default function AddRoomTypePage() {
           className="input input-bordered w-full"
           required
         />
-        <input
-          type="text"
-          name="images"
-          placeholder="Image URLs (comma separated)"
-          value={formData.images}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
+        {/* Updated file input for room images */}
+        <div>
+          <label className="block mb-1">Room Images (max 5)</label>
+          <input
+            type="file"
+            name="images"
+            onChange={handleImagesChange}
+            className="input input-bordered w-full"
+            accept="image/*"
+            multiple
+            disabled={formData.images.length >= 5}
+          />
+          {uploading && <p>Uploading images...</p>}
+          {formData.images.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {formData.images.map((url, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={url}
+                    alt={`Room image ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           type="number"
           name="availableRooms"
