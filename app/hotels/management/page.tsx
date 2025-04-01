@@ -60,6 +60,10 @@ export default function HotelManagementDashboard() {
                 <Link href={`/hotels/${hotel.id}/rooms/add`} className="btn btn-secondary">
                   Add Room Type
                 </Link>
+                {/* New link for managing room types */}
+                <Link href={`/hotels/${hotel.id}/roomTypes`} className="btn btn-secondary">
+                  Manage Room Types
+                </Link>
                 <Link href={`/hotels/${hotel.id}/availability`} className="btn btn-secondary">
                   View/Update Availability
                 </Link>
