@@ -3,18 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import NotificationDropdown from './NotificationDropdown';
 import ThemeToggle from './ThemeToggle';
-import {
-  User,
-  ShoppingCart,
-  LogOut,
-  Hotel,
-  Plane,
-  Book,
-  ChevronDown
-} from 'lucide-react';
+import { User, ShoppingCart, LogOut, Hotel, Plane, Book, ChevronDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const NavBar: React.FC = () => {
   const router = useRouter();
@@ -28,7 +20,7 @@ const NavBar: React.FC = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -58,18 +50,26 @@ const NavBar: React.FC = () => {
     }
   }, [user]);
 
-  // Logout handler that calls the API then uses router.push to redirect
+  // Forced browser-level redirect
   const handleLogout = async () => {
     try {
+      // First update the auth context to clear user state
+      contextLogout();
+      
+      // Make the API call to clear the server-side cookie
       await fetch('/api/users/logout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      contextLogout();
-      router.push('/');
+      
+      // Force a hard browser navigation to home page
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
-      router.push('/');
+      // Still force redirect on error
+      window.location.href = '/';
     }
   };
 
@@ -78,11 +78,9 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav
-      className={`sticky top-0 z-30 transition-all duration-200 ${
-        isScrolled ? 'bg-background shadow-nav' : 'bg-background'
-      }`}
-    >
+    <nav className={`sticky top-0 z-30 transition-all duration-200 ${
+      isScrolled ? 'bg-background shadow-nav' : 'bg-background'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -137,20 +135,20 @@ const NavBar: React.FC = () => {
                   <Plane size={18} className="mr-1" />
                   <span>Flights</span>
                 </Link>
-
+                
                 <div className="border-l h-6 border-border mx-2"></div>
-
+                
                 <NotificationDropdown />
-
+                
                 <Link href="/hotels/management" className="text-foreground hover:text-primary">
                   Hotel Management
                 </Link>
-
+                
                 <Link href="/bookings/user" className="text-foreground hover:text-primary flex items-center">
                   <Book size={18} className="mr-1" />
                   <span>My Bookings</span>
                 </Link>
-
+                
                 <Link href="/checkout/cart" className="relative text-foreground hover:text-primary">
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
@@ -159,7 +157,7 @@ const NavBar: React.FC = () => {
                     </span>
                   )}
                 </Link>
-
+                
                 <div className="relative group">
                   <button className="flex items-center space-x-1 text-foreground hover:text-primary">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-secondary/10 flex items-center justify-center">
@@ -171,7 +169,7 @@ const NavBar: React.FC = () => {
                     </div>
                     <ChevronDown size={16} />
                   </button>
-
+                  
                   <div className="absolute right-0 mt-2 w-48 origin-top-right bg-card rounded-md shadow-lg py-1 z-40 invisible group-hover:visible transition-all opacity-0 group-hover:opacity-100 transform scale-95 group-hover:scale-100">
                     <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-muted/10">
                       Profile
@@ -188,7 +186,7 @@ const NavBar: React.FC = () => {
                         Logout
                       </span>
                     </button>
-
+                    
                     <div className="px-4 py-2 flex items-center justify-between border-t border-border">
                       <span className="text-sm text-muted">Theme</span>
                       <ThemeToggle />
@@ -206,15 +204,15 @@ const NavBar: React.FC = () => {
                   <Plane size={18} className="mr-1" />
                   <span>Flights</span>
                 </Link>
-
+                
                 <div className="border-l h-6 border-border mx-2"></div>
-
+                
                 <ThemeToggle />
-
-                <Link href="/login" className="btn btn-outline text-foreground">
+                
+                <Link href="/login" className="btn-outline text-foreground">
                   Login
                 </Link>
-                <Link href="/signup" className="btn btn-primary">
+                <Link href="/signup" className="btn-primary">
                   Sign Up
                 </Link>
               </>
@@ -233,7 +231,7 @@ const NavBar: React.FC = () => {
             <Link href="/search/flights" className="block py-2 text-foreground hover:text-primary">
               Flights
             </Link>
-
+            
             {user ? (
               <>
                 <div className="border-t border-border my-2"></div>
