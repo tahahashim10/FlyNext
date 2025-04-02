@@ -204,6 +204,7 @@ const NavBar: React.FC = () => {
                         Logout
                       </span>
                     </button>
+
                     <div className="px-4 py-2 flex items-center justify-between border-t border-border">
                       <span className="text-sm text-muted">Theme</span>
                       <ThemeToggle />
@@ -213,18 +214,8 @@ const NavBar: React.FC = () => {
               </>
             ) : (
               <>
-                <Link
-                  href="/bookings"
-                  className="text-foreground hover:text-primary flex items-center"
-                >
-                  <Compass size={18} className="mr-1" />
-                  <span>Book Itinerary</span>
-                </Link>
-
-                <div className="border-l h-6 border-border mx-2"></div>
-
+                {/* For non-signed in users, we remove the "Book Itinerary" link */}
                 <ThemeToggle />
-
                 <Link href="/login" className="btn-outline text-foreground">
                   Login
                 </Link>
@@ -241,13 +232,12 @@ const NavBar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-card shadow-lg rounded-b-lg">
           <div className="pt-2 pb-4 space-y-1 px-4">
-            <Link href="/bookings" className="block py-2 text-foreground hover:text-primary">
-              <Compass size={18} className="mr-1 inline" />
-              <span>Book Itinerary</span>
-            </Link>
-
             {user ? (
               <>
+                <Link href="/bookings" className="block py-2 text-foreground hover:text-primary">
+                  <Compass size={18} className="mr-1 inline" />
+                  <span>Book Itinerary</span>
+                </Link>
                 <div className="border-t border-border my-2"></div>
                 <Link
                   href="/hotels/management"
