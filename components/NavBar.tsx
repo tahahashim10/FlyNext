@@ -20,7 +20,7 @@ const NavBar: React.FC = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -50,25 +50,17 @@ const NavBar: React.FC = () => {
     }
   }, [user]);
 
-  // Forced browser-level redirect
+  // Forced browser-level redirect on logout
   const handleLogout = async () => {
     try {
-      // First update the auth context to clear user state
       contextLogout();
-      
-      // Make the API call to clear the server-side cookie
       await fetch('/api/users/logout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' },
       });
-      
-      // Force a hard browser navigation to home page
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
-      // Still force redirect on error
       window.location.href = '/';
     }
   };
@@ -78,9 +70,11 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className={`sticky top-0 z-30 transition-all duration-200 ${
-      isScrolled ? 'bg-background shadow-nav' : 'bg-background'
-    }`}>
+    <nav
+      className={`sticky top-0 z-30 transition-all duration-200 ${
+        isScrolled ? 'bg-background shadow-nav' : 'bg-background'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -127,29 +121,41 @@ const NavBar: React.FC = () => {
           <div className="hidden md:flex md:items-center md:space-x-6">
             {user ? (
               <>
-                <Link href="/search/hotels" className="text-foreground hover:text-primary flex items-center">
+                <Link
+                  href="/search/hotels"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
                   <Hotel size={18} className="mr-1" />
                   <span>Hotels</span>
                 </Link>
-                <Link href="/search/flights" className="text-foreground hover:text-primary flex items-center">
+                <Link
+                  href="/search/flights"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
                   <Plane size={18} className="mr-1" />
                   <span>Flights</span>
                 </Link>
-                
+
                 <div className="border-l h-6 border-border mx-2"></div>
-                
+
                 <NotificationDropdown />
-                
+
                 <Link href="/hotels/management" className="text-foreground hover:text-primary">
                   Hotel Management
                 </Link>
-                
-                <Link href="/bookings/user" className="text-foreground hover:text-primary flex items-center">
+
+                <Link
+                  href="/bookings/user"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
                   <Book size={18} className="mr-1" />
                   <span>My Bookings</span>
                 </Link>
-                
-                <Link href="/checkout/cart" className="relative text-foreground hover:text-primary">
+
+                <Link
+                  href="/checkout/cart"
+                  className="relative text-foreground hover:text-primary"
+                >
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -157,24 +163,31 @@ const NavBar: React.FC = () => {
                     </span>
                   )}
                 </Link>
-                
+
                 <div className="relative group">
                   <button className="flex items-center space-x-1 text-foreground hover:text-primary">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-secondary/10 flex items-center justify-center">
                       {user.profilePicture ? (
-                        <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        <img
+                          src={user.profilePicture}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <User size={18} />
                       )}
                     </div>
                     <ChevronDown size={16} />
                   </button>
-                  
+
                   <div className="absolute right-0 mt-2 w-48 origin-top-right bg-card rounded-md shadow-lg py-1 z-40 invisible group-hover:visible transition-all opacity-0 group-hover:opacity-100 transform scale-95 group-hover:scale-100">
                     <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-muted/10">
                       Profile
                     </Link>
-                    <Link href="/bookings/verifyFlight" className="block px-4 py-2 text-sm hover:bg-muted/10">
+                    <Link
+                      href="/bookings/verifyFlight"
+                      className="block px-4 py-2 text-sm hover:bg-muted/10"
+                    >
                       Verify Flight
                     </Link>
                     <button
@@ -186,7 +199,7 @@ const NavBar: React.FC = () => {
                         Logout
                       </span>
                     </button>
-                    
+
                     <div className="px-4 py-2 flex items-center justify-between border-t border-border">
                       <span className="text-sm text-muted">Theme</span>
                       <ThemeToggle />
@@ -196,19 +209,25 @@ const NavBar: React.FC = () => {
               </>
             ) : (
               <>
-                <Link href="/search/hotels" className="text-foreground hover:text-primary flex items-center">
+                <Link
+                  href="/search/hotels"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
                   <Hotel size={18} className="mr-1" />
                   <span>Hotels</span>
                 </Link>
-                <Link href="/search/flights" className="text-foreground hover:text-primary flex items-center">
+                <Link
+                  href="/search/flights"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
                   <Plane size={18} className="mr-1" />
                   <span>Flights</span>
                 </Link>
-                
+
                 <div className="border-l h-6 border-border mx-2"></div>
-                
+
                 <ThemeToggle />
-                
+
                 <Link href="/login" className="btn-outline text-foreground">
                   Login
                 </Link>
@@ -231,17 +250,30 @@ const NavBar: React.FC = () => {
             <Link href="/search/flights" className="block py-2 text-foreground hover:text-primary">
               Flights
             </Link>
-            
+
             {user ? (
               <>
                 <div className="border-t border-border my-2"></div>
-                <Link href="/hotels/management" className="block py-2 text-foreground hover:text-primary">
+                <Link
+                  href="/hotels/management"
+                  className="block py-2 text-foreground hover:text-primary"
+                >
                   Hotel Management
                 </Link>
-                <Link href="/bookings/user" className="block py-2 text-foreground hover:text-primary">
+                <Link
+                  href="/bookings/user"
+                  className="block py-2 text-foreground hover:text-primary"
+                >
                   My Bookings
                 </Link>
-                <Link href="/checkout/cart" className="flex items-center py-2 text-foreground hover:text-primary">
+                {/* Mobile Notification Dropdown */}
+                <div className="block py-2">
+                  <NotificationDropdown />
+                </div>
+                <Link
+                  href="/checkout/cart"
+                  className="flex items-center py-2 text-foreground hover:text-primary"
+                >
                   <span>Cart</span>
                   {cartCount > 0 && (
                     <span className="ml-2 bg-primary text-white text-xs rounded-full px-2 py-1">
@@ -249,7 +281,10 @@ const NavBar: React.FC = () => {
                     </span>
                   )}
                 </Link>
-                <Link href="/bookings/verifyFlight" className="block py-2 text-foreground hover:text-primary">
+                <Link
+                  href="/bookings/verifyFlight"
+                  className="block py-2 text-foreground hover:text-primary"
+                >
                   Verify Flight
                 </Link>
                 <Link href="/profile" className="block py-2 text-foreground hover:text-primary">
