@@ -7,7 +7,8 @@ import {
   AlertCircle, 
   CheckCircle2, 
   BookOpen, 
-  RefreshCw 
+  Clock,
+  X 
 } from 'lucide-react';
 import RoomTypeAutoComplete from '@/components/RoomTypeAutoComplete';
 
@@ -33,6 +34,8 @@ export default function ManageBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Debounce timeout state
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -52,6 +55,7 @@ export default function ManageBookingsPage() {
       } else {
         const data = await res.json();
         setBookings(data);
+        setCurrentPage(1); // Reset to first page when filters change
       }
     } catch (err: any) {
       setError('Error fetching bookings');
@@ -93,17 +97,128 @@ export default function ManageBookingsPage() {
     }
   };
 
-  // Helper function to get status color
-  const getStatusColor = (status: string) => {
+  // Pagination helper function
+  const renderPagination = (
+    totalItems: number, 
+    currentPage: number, 
+    setPage: (page: number) => void
+  ) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    // Helper function to generate page range
+    const getPageRange = () => {
+      if (totalPages <= 5) {
+        return Array.from({ length: totalPages }, (_, i) => i + 1);
+      }
+      
+      const range = [];
+      
+      // Always show first page
+      range.push(1);
+      
+      // Determine middle pages
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        // Add ellipsis if we're not near the start
+        if (currentPage > 4) {
+          range.push(-1); // -1 represents ellipsis
+        }
+        
+        // Add pages around current page
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        
+        for (let i = start; i <= end; i++) {
+          range.push(i);
+        }
+        
+        // Add ellipsis if we're not near the end
+        if (currentPage < totalPages - 3) {
+          range.push(-2); // -2 represents another possible ellipsis
+        }
+      } else {
+        // Near start or end, show first few or last few pages
+        if (currentPage <= 3) {
+          range.push(2, 3, 4);
+          range.push(-1); // ellipsis
+        } else {
+          range.push(-1); // ellipsis
+          range.push(totalPages - 3, totalPages - 2, totalPages - 1);
+        }
+      }
+      
+      // Always show last page
+      if (!range.includes(totalPages)) {
+        range.push(totalPages);
+      }
+      
+      return range;
+    };
+    
+    return (
+      <div className="flex justify-center items-center space-x-4 mt-6 min-h-[48px]">
+        <button 
+          onClick={() => setPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="btn btn-ghost btn-sm disabled:opacity-50"
+        >
+          Previous
+        </button>
+        
+        <div className="flex items-center space-x-3">
+          {getPageRange().map((page, index) => {
+            if (page === -1 || page === -2) {
+              return (
+                <span 
+                  key={`ellipsis-${index}`} 
+                  className="px-2 text-muted"
+                >
+                  ...
+                </span>
+              );
+            }
+            
+            return (
+              <button
+                key={page}
+                onClick={() => setPage(page)}
+                className={`btn btn-square btn-sm w-10 ${
+                  currentPage === page 
+                    ? 'btn-primary text-primary-content' 
+                    : 'btn-ghost'
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+        </div>
+        
+        <button 
+          onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="btn btn-ghost btn-sm disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Paginate bookings
+  const paginatedBookings = bookings
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Helper function to get status color and icon
+  const getStatusDetails = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
-        return 'text-green-600';
+        return { color: 'text-green-600', icon: CheckCircle2 };
       case 'CANCELED':
-        return 'text-red-600';
+        return { color: 'text-red-600', icon: X };
       case 'PENDING':
-        return 'text-yellow-600';
+        return { color: 'text-yellow-600', icon: Clock };
       default:
-        return 'text-muted';
+        return { color: 'text-muted', icon: BookOpen };
     }
   };
 
@@ -192,54 +307,56 @@ export default function ManageBookingsPage() {
                 <p className="text-muted">No bookings found.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="p-3 text-left">Booking ID</th>
-                      <th className="p-3 text-left">Hotel</th>
-                      <th className="p-3 text-left">Room</th>
-                      <th className="p-3 text-left">Check-In</th>
-                      <th className="p-3 text-left">Check-Out</th>
-                      <th className="p-3 text-left">Status</th>
-                      <th className="p-3 text-left">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr 
+              <>
+                <div className="space-y-4">
+                  {paginatedBookings.map((booking) => {
+                    const StatusIcon = getStatusDetails(booking.status).icon;
+                    const statusColor = getStatusDetails(booking.status).color;
+
+                    return (
+                      <div 
                         key={booking.id} 
-                        className="border-b last:border-b-0 hover:bg-muted/5 transition-colors"
+                        className="bg-background border border-border rounded-lg p-4 flex items-center justify-between hover:shadow-sm transition-shadow"
                       >
-                        <td className="p-3">{booking.id}</td>
-                        <td className="p-3">{booking.hotel?.name}</td>
-                        <td className="p-3">{booking.room?.name}</td>
-                        <td className="p-3">
-                          {new Date(booking.checkIn).toLocaleDateString()}
-                        </td>
-                        <td className="p-3">
-                          {new Date(booking.checkOut).toLocaleDateString()}
-                        </td>
-                        <td className="p-3">
-                          <span className={`font-semibold ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          {booking.status !== 'CANCELED' && (
-                            <button
-                              onClick={() => handleCancel(booking.id)}
-                              className="btn btn-warning btn-sm"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        <div className="flex-1 mr-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-semibold text-lg">{booking.hotel?.name}</h4>
+                              <p className="text-muted text-sm">{booking.room?.name}</p>
+                            </div>
+                            <div className={`flex items-center ${statusColor}`}>
+                              <StatusIcon className="h-5 w-5 mr-1" />
+                              <span className="font-semibold text-sm">{booking.status}</span>
+                            </div>
+                          </div>
+                          <div className="mt-2 flex justify-between text-sm text-muted">
+                            <span>
+                              {new Date(booking.checkIn).toLocaleDateString()} - 
+                              {new Date(booking.checkOut).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {booking.status !== 'CANCELED' && (
+                          <button
+                            onClick={() => handleCancel(booking.id)}
+                            className="btn btn-warning btn-sm"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {renderPagination(
+                  bookings.length, 
+                  currentPage, 
+                  setCurrentPage
+                )}
+              </>
             )}
           </div>
         </div>
