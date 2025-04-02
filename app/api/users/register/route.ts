@@ -2,7 +2,46 @@ import prisma from "@/utils/db";
 import { NextResponse, NextRequest } from "next/server";
 import { hashPassword } from "@/utils/auth";
 
-// Note: this file is very similar to Exercise 6
+// Function to generate a beautiful initial avatar
+function generateInitialAvatar(firstName: string): string {
+  const initial = firstName.charAt(0).toUpperCase();
+  
+  // Generate a random, pleasing color palette
+  const colors = [
+    { bg: '#3B82F6', text: 'white' },    // Blue
+    { bg: '#10B981', text: 'white' },    // Green
+    { bg: '#6366F1', text: 'white' },    // Indigo
+    { bg: '#8B5CF6', text: 'white' },    // Purple
+    { bg: '#EC4899', text: 'white' },    // Pink
+    { bg: '#F59E0B', text: 'white' },    // Amber
+  ];
+
+  // Select a random color scheme
+  const { bg, text } = colors[Math.floor(Math.random() * colors.length)];
+
+  // Create an SVG with the initial
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="250" height="250" viewBox="0 0 250 250" fill="${bg}">
+      <rect width="250" height="250" fill="${bg}"/>
+      <text 
+        x="50%" 
+        y="50%" 
+        text-anchor="middle" 
+        dy=".35em" 
+        fill="${text}" 
+        font-family="Arial, sans-serif" 
+        font-size="120" 
+        font-weight="400"
+      >
+        ${initial}
+      </text>
+    </svg>
+  `;
+
+  // Convert SVG to base64
+  const base64Svg = Buffer.from(svg).toString('base64');
+  return `data:image/svg+xml;base64,${base64Svg}`;
+}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
@@ -21,8 +60,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (!password || typeof password !== "string" || password.trim() === "") {
             return NextResponse.json({ error: "Password is required and must be a non-empty string" }, { status: 400 });
         }
+        
         // validate email format with a regex
-        // source: https://stackoverflow.com/questions/46155/how-can-i-validate-an-email-address-in-javascript
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
@@ -47,13 +86,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             }
         }
           
-        
-        if (profilePicture !== undefined && profilePicture !== null) {
-            if (typeof profilePicture !== "string" || profilePicture.trim() === "" || !isValidUrl(profilePicture)) {
-                return NextResponse.json({ error: "Profile picture must be a valid URL." }, { status: 400 });
-            }
-        }
-          
+        // If no profile picture is provided, generate a default one
+        const finalProfilePicture = profilePicture 
+            ? (isValidUrl(profilePicture) 
+                ? profilePicture 
+                : NextResponse.json({ error: "Profile picture must be a valid URL." }, { status: 400 }))
+            : generateInitialAvatar(firstName);
 
         // Hash the password
         const hashedPassword = await hashPassword(password);
@@ -66,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 email,
                 password: hashedPassword,
                 phoneNumber,
-                profilePicture,
+                profilePicture: finalProfilePicture,
                 role: role || "USER", 
             },
         });
@@ -92,10 +130,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 }
 
-
 // source: https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
 function isValidUrl(string: string): boolean {
     const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
     return urlRegex.test(string);
-  }
-  
+}
