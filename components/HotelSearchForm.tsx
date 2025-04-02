@@ -23,6 +23,11 @@ interface SearchResults {
   results: Hotel[];
 }
 
+interface Suggestion {
+  label: string;
+  value: string;
+}
+
 interface HotelSearchFormProps {
   initialCity?: string;
   initialCheckIn?: string;
@@ -62,6 +67,49 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   const [results, setResults] = useState<SearchResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState<Suggestion[]>([]);
+
+  // Fetch city suggestions from the backend endpoint
+  const fetchCitySuggestions = async (query: string): Promise<Suggestion[]> => {
+    try {
+      const citiesRes = await fetch('/api/cities');
+      
+      if (!citiesRes.ok) {
+        console.error('Failed to fetch city suggestions.');
+        return [];
+      }
+      
+      const cities = await citiesRes.json();
+      
+      // Map cities to suggestion objects
+      const suggestions: Suggestion[] = cities.map((c: any) => ({
+        label: `${c.city}, ${c.country}`,
+        value: c.city,
+      }));
+      
+      // Filter suggestions based on the query
+      return suggestions.filter((item: Suggestion) =>
+        item.label.toLowerCase().includes(query.toLowerCase())
+      );
+    } catch (err) {
+      console.error('Error fetching city suggestions:', err);
+      return [];
+    }
+  };
+
+  // Handle city input change
+  const handleCityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCity(value);
+    
+    // Only fetch suggestions if there are at least 2 characters
+    if (value.length >= 2) {
+      const suggestions = await fetchCitySuggestions(value);
+      setCitySuggestions(suggestions);
+    } else {
+      setCitySuggestions([]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +153,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
       <div className="bg-card rounded-xl shadow-md p-4 md:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* City input - Fixed icon positioning */}
+            {/* City input with autocomplete suggestions */}
             <div className="relative flex items-center">
               <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <MapPin className="h-5 w-5 text-muted" />
@@ -114,11 +162,29 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 type="text"
                 placeholder="Where are you going?"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={handleCityChange}
                 className="input input-bordered w-full pl-16 focus:pl-16"
                 required
                 style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
+              {citySuggestions.length > 0 && (
+                <div className="absolute w-full" style={{ top: '100%', left: 0 }}>
+                  <ul className="z-[9999] mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border w-full">
+                    {citySuggestions.map((sugg, idx) => (
+                      <li
+                        key={idx}
+                        className="px-4 py-2 hover:bg-muted/10 cursor-pointer"
+                        onClick={() => {
+                          setCity(sugg.value);
+                          setCitySuggestions([]);
+                        }}
+                      >
+                        {sugg.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             
             {/* Check-in date input - Fixed icon positioning */}
