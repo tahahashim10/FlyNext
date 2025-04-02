@@ -1,40 +1,30 @@
 'use client';
 
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 
-// Fix default icon path
-delete (L.Icon.Default as any)._getIconUrl;
-(L.Icon.Default as any).mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-});
-
+// Define props interface
 interface OSMMapProps {
   lat: number;
   lng: number;
 }
 
+// Create a dynamic import for the map component with SSR disabled
+const MapWithNoSSR = dynamic(
+  () => import('./MapComponent'), // Importing from a separate file
+  { 
+    ssr: false, // This is the key - disable server-side rendering
+    loading: () => (
+      <div className="w-full h-full bg-muted/20 flex items-center justify-center">
+        <p>Loading map...</p>
+      </div>
+    )
+  }
+);
+
+// The main component is just a wrapper around the dynamically imported component
 const OSMMap: React.FC<OSMMapProps> = ({ lat, lng }) => {
-  return (
-    <MapContainer
-      center={[lat, lng]}
-      zoom={15}
-      style={{ width: '100%', height: '100%' }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Marker position={[lat, lng]}>
-        <Popup>Hotel Location</Popup>
-      </Marker>
-    </MapContainer>
-  );
+  return <MapWithNoSSR lat={lat} lng={lng} />;
 };
 
 export default OSMMap;
