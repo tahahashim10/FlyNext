@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from 'react';
 
-interface CitySuggestion {
+interface City {
   city: string;
   country: string;
+}
+
+interface Suggestion {
+  label: string;
+  value: string;
 }
 
 interface CitySuggestionsDropdownProps {
@@ -18,45 +23,45 @@ export default function CitySuggestionsDropdown({
   onSelect,
   visible,
 }: CitySuggestionsDropdownProps) {
-  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (!query || query.length < 2 || !visible) {
-        setSuggestions([]);
-        return;
-      }
-      
-      setLoading(true);
-      setError('');
-      
-      try {
-        const res = await fetch('/api/cities');
-        
-        if (!res.ok) {
-          setError('Failed to fetch city suggestions');
-          return;
+    if (!query || query.length < 2 || !visible) {
+      setSuggestions([]);
+      return;
+    }
+    
+    // Debounce the API call by 300ms to reduce lag
+    const timer = setTimeout(() => {
+      const fetchSuggestions = async () => {
+        setLoading(true);
+        try {
+          const res = await fetch('/api/cities');
+          if (!res.ok) {
+            console.error('Failed to fetch city suggestions');
+            return;
+          }
+          const cities: City[] = await res.json();
+          const filtered: Suggestion[] = cities
+            .map((c) => ({
+              label: `${c.city}, ${c.country}`,
+              value: c.city,
+            }))
+            .filter((sugg) =>
+              sugg.label.toLowerCase().includes(query.toLowerCase())
+            );
+          setSuggestions(filtered);
+        } catch (err) {
+          console.error('Error fetching city suggestions:', err);
+        } finally {
+          setLoading(false);
         }
-        
-        const cities = await res.json();
-        
-        // Filter cities based on query
-        const filteredCities = cities.filter((city: CitySuggestion) => 
-          city.city.toLowerCase().includes(query.toLowerCase())
-        );
-        
-        setSuggestions(filteredCities);
-      } catch (err) {
-        console.error('Error fetching city suggestions:', err);
-        setError('Error fetching city suggestions');
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
+      fetchSuggestions();
+    }, 300);
 
-    fetchSuggestions();
+    return () => clearTimeout(timer);
   }, [query, visible]);
 
   if (!visible || !query || query.length < 2) {
@@ -65,30 +70,23 @@ export default function CitySuggestionsDropdown({
 
   return (
     <div className="absolute z-50 w-full mt-1 bg-card shadow-lg max-h-60 overflow-auto rounded-md border border-border">
-      {loading && (
+      {loading ? (
         <div className="px-4 py-2 text-sm text-muted">Loading suggestions...</div>
-      )}
-      
-      {error && (
-        <div className="px-4 py-2 text-sm text-destructive">{error}</div>
-      )}
-      
-      {!loading && !error && suggestions.length === 0 && (
+      ) : suggestions.length === 0 ? (
         <div className="px-4 py-2 text-sm text-muted">No cities found</div>
+      ) : (
+        <ul className="py-1">
+          {suggestions.map((sugg, index) => (
+            <li
+              key={index}
+              className="px-4 py-2 hover:bg-muted/30 cursor-pointer"
+              onClick={() => onSelect(sugg.value)}
+            >
+              <div className="font-medium">{sugg.label}</div>
+            </li>
+          ))}
+        </ul>
       )}
-      
-      <ul className="py-1">
-        {suggestions.map((suggestion, index) => (
-          <li
-            key={`${suggestion.city}-${index}`}
-            className="px-4 py-2 hover:bg-muted/30 cursor-pointer text-foreground transition-colors"
-            onClick={() => onSelect(suggestion.city)}
-          >
-            <div className="font-medium">{suggestion.city}</div>
-            <div className="text-xs text-muted">{suggestion.country}</div>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

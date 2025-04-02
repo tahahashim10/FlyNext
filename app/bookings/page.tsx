@@ -42,9 +42,42 @@ export default function BookingFormPage() {
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
   const [activeTab, setActiveTab] = useState<'hotel' | 'flight'>('hotel');
   
-  // State for city autocomplete
+  // State for city autocomplete (for destinationCity)
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [showCitySuggestionsFlightTab, setShowCitySuggestionsFlightTab] = useState(false);
+  // New state for departure city autocomplete
+  const [showDepartureCitySuggestions, setShowDepartureCitySuggestions] = useState(false);
+
+  // When flightIds changes, prepopulate destinationCity from the flight's route
+  useEffect(() => {
+    async function fetchFlightDestination() {
+      const trimmedIds = bookingData.flightIds.trim();
+      // Optionally, only fetch when flight id is longer than a threshold (e.g., 8 characters)
+      if (trimmedIds.length >= 8) {
+        // Use the first flight id if there are multiple ids
+        const flightId = trimmedIds.split(',')[0].trim();
+        try {
+          const res = await fetch(`/api/flights/${flightId}`);
+          if (res.ok) {
+            const flightData = await res.json();
+            // Check that flightData and its destination exist before accessing city
+            if (flightData && flightData.destination && flightData.destination.city) {
+              setBookingData(prev => ({
+                ...prev,
+                destinationCity: flightData.destination.city,
+              }));
+            }
+          } else {
+            console.error("Failed to fetch flight destination", await res.text());
+          }
+        } catch (error) {
+          console.error("Error fetching flight destination", error);
+        }
+      }
+    }
+    fetchFlightDestination();
+  }, [bookingData.flightIds]);
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
@@ -73,6 +106,15 @@ export default function BookingFormPage() {
         setShowCitySuggestionsFlightTab(true);
       } else {
         setShowCitySuggestionsFlightTab(false);
+      }
+    }
+
+    // When departure city changes, show suggestions if input length >= 2
+    if (e.target.name === 'departureCity') {
+      if (e.target.value.trim().length >= 2) {
+        setShowDepartureCitySuggestions(true);
+      } else {
+        setShowDepartureCitySuggestions(false);
       }
     }
   };
@@ -432,18 +474,38 @@ export default function BookingFormPage() {
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <label className="block text-sm font-medium mb-1">Departure City</label>
-                        <div className="relative flex items-center">
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none z-10">
-                            <Plane className="h-5 w-5 text-muted transform -rotate-45" />
+                        <div className="relative">
+                          <div className="relative flex items-center">
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none z-10">
+                              <Plane className="h-5 w-5 text-muted transform -rotate-45" />
+                            </div>
+                            <input
+                              type="text"
+                              name="departureCity"
+                              placeholder="e.g. Toronto"
+                              value={bookingData.departureCity}
+                              onChange={handleChange}
+                              onFocus={() => {
+                                if (bookingData.departureCity.trim().length >= 2) {
+                                  setShowDepartureCitySuggestions(true);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Delay hiding to allow click on suggestion to register
+                                setTimeout(() => setShowDepartureCitySuggestions(false), 200);
+                              }}
+                              className="input input-bordered w-full pl-16 focus:pl-16"
+                              style={{ paddingLeft: '2.5rem' }}
+                            />
                           </div>
-                          <input
-                            type="text"
-                            name="departureCity"
-                            placeholder="e.g. Toronto"
-                            value={bookingData.departureCity}
-                            onChange={handleChange}
-                            className="input input-bordered w-full pl-16 focus:pl-16"
-                            style={{ paddingLeft: '2.5rem' }}
+                          {/* City suggestions dropdown for departure city */}
+                          <CitySuggestionsDropdown
+                            query={bookingData.departureCity}
+                            visible={showDepartureCitySuggestions}
+                            onSelect={(city) => {
+                              setBookingData({ ...bookingData, departureCity: city });
+                              setShowDepartureCitySuggestions(false);
+                            }}
                           />
                         </div>
                       </div>
