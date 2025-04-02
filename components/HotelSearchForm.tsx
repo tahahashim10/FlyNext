@@ -163,7 +163,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 placeholder="Where are you going?"
                 value={city}
                 onChange={handleCityChange}
-                className="input input-bordered w-full pl-16 focus:pl-16"
+                className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
                 style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
@@ -197,7 +197,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 placeholder="Check-in"
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
-                className="input input-bordered w-full pl-16 focus:pl-16"
+                className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
                 style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
@@ -213,7 +213,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 placeholder="Check-out"
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
-                className="input input-bordered w-full pl-16 focus:pl-16"
+                className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
                 style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
               />
@@ -244,7 +244,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 placeholder="Hotel Name"
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
-                className="input input-bordered w-full"
+                className="input input-bordered w-full bg-background text-foreground"
               />
               
               <div className="relative flex items-center">
@@ -254,15 +254,15 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 <select
                   value={starRating}
                   onChange={(e) => setStarRating(e.target.value)}
-                  className="input input-bordered w-full pl-16 focus:pl-16 appearance-none"
+                  className="input input-bordered w-full pl-16 focus:pl-16 appearance-none bg-background text-foreground"
                   style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
                 >
-                  <option value="">Any Rating</option>
-                  <option value="5">5 Stars</option>
-                  <option value="4">4+ Stars</option>
-                  <option value="3">3+ Stars</option>
-                  <option value="2">2+ Stars</option>
-                  <option value="1">1+ Stars</option>
+                  <option value="" className="bg-background text-foreground">Any Rating</option>
+                  <option value="5" className="bg-background text-foreground">5 Stars</option>
+                  <option value="4" className="bg-background text-foreground">4+ Stars</option>
+                  <option value="3" className="bg-background text-foreground">3+ Stars</option>
+                  <option value="2" className="bg-background text-foreground">2+ Stars</option>
+                  <option value="1" className="bg-background text-foreground">1+ Stars</option>
                 </select>
               </div>
               
@@ -272,14 +272,14 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                   placeholder="Min Price"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-background text-foreground"
                 />
                 <input
                   type="number"
                   placeholder="Max Price"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-background text-foreground"
                 />
               </div>
             </div>
