@@ -1,8 +1,8 @@
-// app/api/users/logout/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { serialize } from 'cookie';
 
 export async function POST(request: NextRequest) {
+  // Clear the authentication token cookie
   const cookie = serialize('token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -10,7 +10,12 @@ export async function POST(request: NextRequest) {
     path: '/',
     maxAge: 0, // Clear the cookie immediately
   });
-  const response = NextResponse.json({ message: 'Logout successful' });
+
+  // Just return a success response, don't try to redirect
+  const response = NextResponse.json({ success: true });
+  
+  // Set the cookie to clear the token
   response.headers.set('Set-Cookie', cookie);
+  
   return response;
 }
