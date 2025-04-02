@@ -12,7 +12,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });

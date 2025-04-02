@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { 
+  Hotel, 
+  Upload, 
+  Trash2, 
+  AlertCircle, 
+  CheckCircle2, 
+  Star, 
+  MapPin 
+} from 'lucide-react';
 import { uploadImage } from '@/utils/uploadImage';
 
 interface Hotel {
@@ -165,108 +174,196 @@ export default function EditHotelPage() {
   if (!hotel) return <div className="p-4">Loading...</div>;
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Edit Hotel</h2>
-      {success && <p className="text-green-500 mb-2">{success}</p>}
-      <form onSubmit={handleUpdate} className="space-y-4">
-        <input
-          type="text"
-          name="name"
-          placeholder="Hotel Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        {/* Hotel Logo Upload */}
-        <div>
-          <label className="block mb-1">Hotel Logo</label>
-          <input
-            type="file"
-            name="logo"
-            onChange={handleLogoChange}
-            className="input input-bordered w-full"
-            accept="image/*"
-          />
-          {uploadingLogo && <p>Uploading logo...</p>}
-          {formData.logo && (
-            <img
-              src={formData.logo}
-              alt="Hotel Logo Preview"
-              className="mt-2 w-20 h-20 object-cover rounded"
-            />
-          )}
-        </div>
-        <input
-          type="text"
-          name="address"
-          placeholder="Address"
-          value={formData.address}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        <input
-          type="text"
-          name="location"
-          placeholder="Location/City"
-          value={formData.location}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        <input
-          type="number"
-          name="starRating"
-          placeholder="Star Rating"
-          value={formData.starRating}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-          min="0"
-          max="5"
-        />
-        {/* Hotel Images Upload */}
-        <div>
-          <label className="block mb-1">Hotel Images (max 5)</label>
-          <input
-            type="file"
-            name="images"
-            onChange={handleImagesChange}
-            className="input input-bordered w-full"
-            accept="image/*"
-            multiple
-            disabled={formData.images.length >= 5}
-          />
-          {uploadingImages && <p>Uploading images...</p>}
-          {formData.images.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.images.map((url, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={url}
-                    alt={`Hotel image ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs"
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          {/* Hero-like header section */}
+          <div className="relative mb-12 bg-gradient-to-r from-secondary to-primary/40 rounded-xl overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/hero-travel.jpg')] bg-cover bg-center mix-blend-overlay opacity-60"></div>
+            <div className="relative p-8 text-white">
+              <h1 className="text-3xl md:text-4xl font-bold">Edit Hotel</h1>
+              <p className="mt-4 text-lg max-w-2xl">
+                Update your hotel details, logo, and images.
+              </p>
+            </div>
+          </div>
+
+          {/* Notifications */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <AlertCircle className="h-5 w-5 mr-3 text-red-500" />
+              <p>{error}</p>
             </div>
           )}
+          
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <CheckCircle2 className="h-5 w-5 mr-3 text-green-500" />
+              <p>{success}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleUpdate} className="bg-card border border-border rounded-xl p-8 space-y-6">
+            {/* Hotel Name */}
+            <div>
+              <label className="block mb-2 font-semibold">Hotel Name</label>
+              <div className="flex items-center space-x-3">
+                <Hotel className="h-6 w-6 text-primary" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter hotel name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Hotel Logo Upload */}
+            <div>
+              <label className="block mb-2 font-semibold">Hotel Logo</label>
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  {formData.logo ? (
+                    <img
+                      src={formData.logo}
+                      alt="Hotel Logo Preview"
+                      className="w-24 h-24 object-cover rounded-lg border border-border"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-muted/10 rounded-lg flex items-center justify-center">
+                      <Hotel className="h-12 w-12 text-muted" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <Upload className="h-5 w-5 text-primary" />
+                    <input
+                      type="file"
+                      name="logo"
+                      onChange={handleLogoChange}
+                      className="input input-bordered w-full"
+                      accept="image/*"
+                    />
+                  </div>
+                  {uploadingLogo && <p className="text-sm text-muted mt-2">Uploading logo...</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div>
+              <label className="block mb-2 font-semibold">Address</label>
+              <div className="flex items-center space-x-3">
+                <MapPin className="h-6 w-6 text-primary" />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Enter hotel address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block mb-2 font-semibold">Location/City</label>
+              <div className="flex items-center space-x-3">
+                <MapPin className="h-6 w-6 text-primary" />
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="Enter city or region"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Star Rating */}
+            <div>
+              <label className="block mb-2 font-semibold">Star Rating</label>
+              <div className="flex items-center space-x-3">
+                <Star className="h-6 w-6 text-primary" />
+                <input
+                  type="number"
+                  name="starRating"
+                  placeholder="Hotel star rating"
+                  value={formData.starRating}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                  min="0"
+                  max="5"
+                />
+              </div>
+            </div>
+
+            {/* Hotel Images Upload */}
+            <div>
+              <label className="block mb-2 font-semibold">Hotel Images (max 5)</label>
+              <div className="flex items-center space-x-3 mb-4">
+                <Upload className="h-6 w-6 text-primary" />
+                <input
+                  type="file"
+                  name="images"
+                  onChange={handleImagesChange}
+                  className="input input-bordered w-full"
+                  accept="image/*"
+                  multiple
+                  disabled={formData.images.length >= 5}
+                />
+              </div>
+              {uploadingImages && <p className="text-sm text-muted mb-2">Uploading images...</p>}
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {formData.images.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Hotel image ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <button 
+                type="submit" 
+                className="btn btn-primary flex items-center justify-center"
+              >
+                Update Hotel
+              </button>
+              <button 
+                type="button"
+                onClick={handleDelete} 
+                className="btn btn-danger flex items-center justify-center"
+              >
+                <Trash2 className="h-5 w-5 mr-2" /> Delete Hotel
+              </button>
+            </div>
+          </form>
         </div>
-        <button type="submit" className="btn btn-primary w-full">
-          Update Hotel
-        </button>
-      </form>
-      <button onClick={handleDelete} className="btn btn-danger w-full mt-4">
-        Delete Hotel
-      </button>
+      </div>
     </div>
   );
 }
