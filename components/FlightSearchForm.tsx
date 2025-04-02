@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MapPin, Plane, RefreshCw, Search } from 'lucide-react';
+import { Calendar, MapPin, Plane, RefreshCw, Search, AlertTriangle } from 'lucide-react';
 
 interface Suggestion {
   label: string;
@@ -60,6 +60,7 @@ const FlightSearchForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Check authentication status on mount.
   useEffect(() => {
@@ -74,6 +75,26 @@ const FlightSearchForm: React.FC = () => {
     }
     checkAuth();
   }, []);
+
+  // Clear auth error when user scrolls or after a timeout
+  useEffect(() => {
+    if (authError) {
+      const timer = setTimeout(() => {
+        setAuthError(null);
+      }, 5000);
+      
+      const handleScroll = () => {
+        setAuthError(null);
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [authError]);
 
   // Fetch suggestions from the backend endpoints.
   const fetchSuggestions = async (query: string): Promise<Suggestion[]> => {
@@ -136,6 +157,7 @@ const FlightSearchForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setAuthError(null);
     setResults(null);
     setIsLoading(true);
 
@@ -164,6 +186,16 @@ const FlightSearchForm: React.FC = () => {
       setError('Error fetching flights');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBookNow = (flightId: string) => {
+    if (!isLoggedIn) {
+      setAuthError("You must log in to book a flight");
+      // Scroll to the top where the error will be displayed
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      router.push(`/bookings?flightIds=${encodeURIComponent(flightId)}`);
     }
   };
 
@@ -208,6 +240,23 @@ const FlightSearchForm: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="bg-card rounded-xl shadow-md p-4 md:p-6 relative">
+        {/* Authentication error message at the top */}
+        {authError && (
+          <div className="absolute top-0 left-0 right-0 p-3 bg-destructive text-white z-50 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <span>{authError}</span>
+            </div>
+            <button 
+              onClick={() => setAuthError(null)} 
+              className="text-white hover:text-white/80"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center space-x-4 mb-4">
             <label className="inline-flex items-center cursor-pointer">
@@ -429,16 +478,11 @@ const FlightSearchForm: React.FC = () => {
                             {flight.price} {flight.currency || "USD"}
                           </div>
                           <button
-                            className="btn-primary"
-                            onClick={() => {
-                              if (!isLoggedIn) {
-                                setError("You must log in to book.");
-                              } else {
-                                router.push(`/bookings?flightIds=${encodeURIComponent(flight.id)}`);
-                              }
-                            }}
+                            className={`${isLoggedIn ? 'btn-primary' : 'btn-destructive'} flex items-center`}
+                            onClick={() => handleBookNow(flight.id)}
                           >
-                            Book Now
+                            {!isLoggedIn && <AlertTriangle className="h-4 w-4 mr-1" />}
+                            {isLoggedIn ? 'Book Now' : 'Login to Book'}
                           </button>
                         </div>
                       </div>
@@ -520,16 +564,11 @@ const FlightSearchForm: React.FC = () => {
                                 {flight.price} {flight.currency || "USD"}
                               </div>
                               <button
-                                className="btn-primary"
-                                onClick={() => {
-                                  if (!isLoggedIn) {
-                                    setError("You must log in to book.");
-                                  } else {
-                                    router.push(`/bookings?flightIds=${encodeURIComponent(flight.id)}`);
-                                  }
-                                }}
+                                className={`${isLoggedIn ? 'btn-primary' : 'btn-destructive'} flex items-center`}
+                                onClick={() => handleBookNow(flight.id)}
                               >
-                                Book Now
+                                {!isLoggedIn && <AlertTriangle className="h-4 w-4 mr-1" />}
+                                {isLoggedIn ? 'Book Now' : 'Login to Book'}
                               </button>
                             </div>
                           </div>
@@ -553,11 +592,6 @@ const FlightSearchForm: React.FC = () => {
             <div className="text-center py-10 border border-border rounded-lg">
               <p className="text-lg text-muted">No flights found matching your criteria.</p>
               <p className="mt-2">Try adjusting your search parameters or dates.</p>
-            </div>
-          )}
-          {error && (
-            <div className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm mt-4">
-              {error}
             </div>
           )}
         </div>

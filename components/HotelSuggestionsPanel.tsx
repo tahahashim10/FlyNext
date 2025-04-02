@@ -53,21 +53,21 @@ export default function HotelSuggestionsPanel({
   }, [query]);
 
   return (
-    <div className="border p-4 rounded mt-2 bg-white shadow-md">
+    <div className="p-4 rounded bg-card text-foreground">
       <h4 className="font-semibold mb-2">Hotel Suggestions</h4>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
       {hotels.length === 0 ? (
-        <p className="text-sm">No hotel suggestions found.</p>
+        <p className="text-sm text-foreground/80">No hotel suggestions found.</p>
       ) : (
         <ul className="space-y-2">
           {hotels.map((hotel, index) => (
             <li
               key={`${hotel.id}-${index}`}
-              className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+              className="cursor-pointer hover:bg-muted/30 p-2 rounded transition-colors"
               onClick={() => onSelect(hotel.id)}
             >
               <p className="text-sm">{hotel.name} (Rating: {hotel.starRating})</p>
-              <p className="text-xs">{hotel.address}</p>
+              <p className="text-xs text-foreground/70">{hotel.address}</p>
             </li>
           ))}
         </ul>
