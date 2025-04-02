@@ -46,7 +46,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const whereClause: any = {};
     if (city) whereClause.location = { contains: city }; 
     if (name) whereClause.name = { contains: name };
-    if (starRating) whereClause.starRating = Number(starRating);
+    
+    // Handle star rating to support the "+" functionality (e.g., 4+ means 4 or higher)
+    if (starRating) {
+        whereClause.starRating = { gte: Number(starRating) }; // gte means greater than or equal to
+    }
 
     try {
         let hotels;
@@ -204,4 +208,3 @@ function isValidUrl(string: string): boolean {
     const urlRegex = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
     return urlRegex.test(string);
 }
-  
