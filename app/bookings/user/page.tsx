@@ -11,6 +11,12 @@ interface Booking {
   checkOut?: string;
   status: 'CONFIRMED' | 'PENDING' | 'CANCELED' | 'COMPLETED';
   flightBookingReference?: string;
+  flightIds?: string[]; // flightIds is stored as an array
+  // Optionally, if enriched by your API:
+  origin?: { city: string; country: string };
+  destination?: { city: string; country: string };
+  departureTime?: string;
+  arrivalTime?: string;
 }
 
 const BookingStatusIcons = {
@@ -36,6 +42,45 @@ const BookingStatusIcons = {
   }
 };
 
+interface FlightDetailsData {
+  origin: { city: string; country: string };
+  destination: { city: string; country: string };
+  flightNumber?: string;
+  // include any other fields you might want
+}
+
+function FlightDetails({ flightId }: { flightId: string }) {
+  const [details, setDetails] = useState<FlightDetailsData | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchDetails() {
+      try {
+        const res = await fetch(`/api/flights/${flightId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDetails(data);
+        } else {
+          const errText = await res.text();
+          setError(`Error: ${errText}`);
+        }
+      } catch (err: any) {
+        setError('Failed to fetch flight details');
+      }
+    }
+    fetchDetails();
+  }, [flightId]);
+
+  if (error) return <span className="text-sm text-muted">{error}</span>;
+  if (!details) return <span className="text-sm text-muted">Loading flight info...</span>;
+
+  return (
+    <span className="text-sm text-muted">
+      {details.origin.city}, {details.origin.country} → {details.destination.city}, {details.destination.country}
+    </span>
+  );
+}
+
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<{ 
     hotelBookings: Booking[]; 
@@ -44,27 +89,36 @@ export default function MyBookingsPage() {
     hotelBookings: [],
     flightBookings: []
   });
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   
+  // Global fetch error (for bookings retrieval)
+  const [fetchError, setFetchError] = useState('');
+  
+  // Cancellation messages/errors for hotel bookings
+  const [cancelHotelMessage, setCancelHotelMessage] = useState('');
+  const [cancelHotelError, setCancelHotelError] = useState('');
+  
+  // Cancellation messages/errors for flight bookings
+  const [cancelFlightMessage, setCancelFlightMessage] = useState('');
+  const [cancelFlightError, setCancelFlightError] = useState('');
+
   // Pagination state
   const [hotelPage, setHotelPage] = useState(1);
   const [flightPage, setFlightPage] = useState(1);
   const itemsPerPage = 5;
 
   const fetchBookings = async () => {
-    setError('');
+    setFetchError('');
     try {
       const res = await fetch('/api/bookings/user', { credentials: 'include' });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Failed to fetch bookings');
+        setFetchError(data.error || 'Failed to fetch bookings');
       } else {
         const data = await res.json();
         setBookings(data);
       }
     } catch (err: any) {
-      setError('Error fetching bookings');
+      setFetchError('Error fetching bookings');
     }
   };
 
@@ -73,8 +127,11 @@ export default function MyBookingsPage() {
   }, []);
 
   const handleCancel = async (bookingId: number, bookingType: 'hotel' | 'flight') => {
-    setError('');
-    setMessage('');
+    // Clear cancellation messages for both types
+    setCancelHotelMessage('');
+    setCancelHotelError('');
+    setCancelFlightMessage('');
+    setCancelFlightError('');
     try {
       const res = await fetch('/api/bookings/user', {
         method: 'PATCH',
@@ -84,13 +141,25 @@ export default function MyBookingsPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Failed to cancel booking');
+        if (bookingType === 'hotel') {
+          setCancelHotelError(data.error || 'Failed to cancel booking');
+        } else {
+          setCancelFlightError(data.error || 'Failed to cancel booking');
+        }
       } else {
-        setMessage('Booking canceled successfully');
+        if (bookingType === 'hotel') {
+          setCancelHotelMessage('Booking canceled successfully');
+        } else {
+          setCancelFlightMessage('Booking canceled successfully');
+        }
         fetchBookings();
       }
     } catch (err: any) {
-      setError('Error canceling booking');
+      if (bookingType === 'hotel') {
+        setCancelHotelError('Error canceling booking');
+      } else {
+        setCancelFlightError('Error canceling booking');
+      }
     }
   };
 
@@ -101,48 +170,36 @@ export default function MyBookingsPage() {
   ) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     
-    // Helper function to generate page range
     const getPageRange = () => {
       if (totalPages <= 5) {
         return Array.from({ length: totalPages }, (_, i) => i + 1);
       }
       
       const range = [];
-      
-      // Always show first page
       range.push(1);
       
-      // Determine middle pages
       if (currentPage > 3 && currentPage < totalPages - 2) {
-        // Add ellipsis if we're not near the start
         if (currentPage > 4) {
-          range.push(-1); // -1 represents ellipsis
+          range.push(-1);
         }
-        
-        // Add pages around current page
         const start = Math.max(2, currentPage - 1);
         const end = Math.min(totalPages - 1, currentPage + 1);
-        
         for (let i = start; i <= end; i++) {
           range.push(i);
         }
-        
-        // Add ellipsis if we're not near the end
         if (currentPage < totalPages - 3) {
-          range.push(-2); // -2 represents another possible ellipsis
+          range.push(-2);
         }
       } else {
-        // Near start or end, show first few or last few pages
         if (currentPage <= 3) {
           range.push(2, 3, 4);
-          range.push(-1); // ellipsis
+          range.push(-1);
         } else {
-          range.push(-1); // ellipsis
+          range.push(-1);
           range.push(totalPages - 3, totalPages - 2, totalPages - 1);
         }
       }
       
-      // Always show last page
       if (!range.includes(totalPages)) {
         range.push(totalPages);
       }
@@ -227,7 +284,22 @@ export default function MyBookingsPage() {
                 </p>
               </>
             ) : (
-              <h3 className="text-lg font-semibold">Flight Booking</h3>
+              <>
+                <h3 className="text-lg font-semibold">Flight Booking</h3>
+                <p className="text-muted text-sm">
+                  Flight Ref: {booking.flightBookingReference || 'N/A'} | Flight ID: {booking.flightIds && booking.flightIds[0] ? booking.flightIds[0] : 'N/A'}
+                </p>
+                {booking.origin && booking.destination ? (
+                  <p className="text-muted text-sm">
+                    {booking.origin.city}, {booking.origin.country} → {booking.destination.city}, {booking.destination.country}
+                  </p>
+                ) : booking.flightIds && booking.flightIds[0] ? (
+                  // If origin/destination are missing, fetch details via FlightDetails component
+                  <FlightDetails flightId={booking.flightIds[0]} />
+                ) : (
+                  <p className="text-muted text-sm">Origin/Destination not available</p>
+                )}
+              </>
             )}
             
             <div className="flex items-center space-x-2 mt-2">
@@ -262,17 +334,10 @@ export default function MyBookingsPage() {
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">My Bookings</h2>
           
-          {error && (
+          {fetchError && (
             <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center">
               <AlertCircle className="h-5 w-5 mr-3 text-red-500" />
-              <p>{error}</p>
-            </div>
-          )}
-          
-          {message && (
-            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center">
-              <CheckCircle2 className="h-5 w-5 mr-3 text-green-500" />
-              <p>{message}</p>
+              <p>{fetchError}</p>
             </div>
           )}
           
@@ -282,6 +347,21 @@ export default function MyBookingsPage() {
                 <Hotel className="h-6 w-6 mr-2 text-primary" />
                 Hotel Bookings
               </h3>
+              
+              {/* Hotel cancellation messages */}
+              {cancelHotelError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-3 text-red-500" />
+                  <p>{cancelHotelError}</p>
+                </div>
+              )}
+              {cancelHotelMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 flex items-center">
+                  <CheckCircle2 className="h-5 w-5 mr-3 text-green-500" />
+                  <p>{cancelHotelMessage}</p>
+                </div>
+              )}
+              
               {bookings.hotelBookings.length > 0 ? (
                 <>
                   {paginatedHotelBookings.map(booking => renderBookingCard(booking, 'hotel'))}
@@ -303,6 +383,21 @@ export default function MyBookingsPage() {
                 <Plane className="h-6 w-6 mr-2 text-primary" />
                 Flight Bookings
               </h3>
+              
+              {/* Flight cancellation messages appear directly above Flight Bookings */}
+              {cancelFlightError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-3 text-red-500" />
+                  <p>{cancelFlightError}</p>
+                </div>
+              )}
+              {cancelFlightMessage && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 flex items-center">
+                  <CheckCircle2 className="h-5 w-5 mr-3 text-green-500" />
+                  <p>{cancelFlightMessage}</p>
+                </div>
+              )}
+              
               {bookings.flightBookings.length > 0 ? (
                 <>
                   {paginatedFlightBookings.map(booking => renderBookingCard(booking, 'flight'))}
