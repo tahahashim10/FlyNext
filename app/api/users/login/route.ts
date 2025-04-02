@@ -40,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       email: user.email, 
       role: user.role 
     };
-    const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "1m" });
+    const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "90m" });
     const refreshToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
 
     // Set tokens in HTTP-only cookies
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 30 * 60, // 30 minutes
+      maxAge: 90 * 60, // 30 minutes
     });
 
     const refreshCookie = serialize("refreshToken", refreshToken, {
