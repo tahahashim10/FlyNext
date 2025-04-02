@@ -24,7 +24,7 @@ export default function HomePage() {
       </div>
 
       {/* Search container that overlaps hero and content */}
-      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-30">
+      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-25">
         <div className="bg-card shadow-lg rounded-xl overflow-visible">
           {/* Tab navigation */}
           <div className="flex border-b border-border">
