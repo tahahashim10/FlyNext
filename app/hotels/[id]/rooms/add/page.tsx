@@ -1,11 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { 
+  Upload, 
+  Trash2, 
+  AlertCircle, 
+  CheckCircle2, 
+  Bed, 
+  DollarSign, 
+  Key,
+  PlusCircle 
+} from 'lucide-react';
 import { uploadImage } from '@/utils/uploadImage';
 
 export default function AddRoomTypePage() {
   const { id: hotelId } = useParams();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     amenities: '',
@@ -90,14 +101,8 @@ export default function AddRoomTypePage() {
         setError(data.error || 'Failed to add room type');
       } else {
         setSuccess('Room type added successfully!');
-        // Clear the form after success
-        setFormData({
-          name: '',
-          amenities: '',
-          pricePerNight: '',
-          images: [],
-          availableRooms: ''
-        });
+        // Redirect to hotel management or room types page after success
+        router.push(`/hotels/${hotelId}/roomTypes`);
       }
     } catch (err: any) {
       setError('Error submitting form');
@@ -105,84 +110,155 @@ export default function AddRoomTypePage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Add Room Type</h2>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {success && <p className="text-green-500 mb-2">{success}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          name="name"
-          placeholder="Room Name (e.g. Twin, Double)"
-          value={formData.name}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        <input
-          type="text"
-          name="amenities"
-          placeholder="Amenities (comma separated)"
-          value={formData.amenities}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-        />
-        <input
-          type="number"
-          name="pricePerNight"
-          placeholder="Price Per Night"
-          value={formData.pricePerNight}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        {/* Updated file input for room images */}
-        <div>
-          <label className="block mb-1">Room Images (max 5)</label>
-          <input
-            type="file"
-            name="images"
-            onChange={handleImagesChange}
-            className="input input-bordered w-full"
-            accept="image/*"
-            multiple
-            disabled={formData.images.length >= 5}
-          />
-          {uploading && <p>Uploading images...</p>}
-          {formData.images.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.images.map((url, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={url}
-                    alt={`Room image ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs"
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          {/* Hero-like header section */}
+          <div className="relative mb-12 bg-gradient-to-r from-secondary to-primary/40 rounded-xl overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/hero-travel.jpg')] bg-cover bg-center mix-blend-overlay opacity-60"></div>
+            <div className="relative p-8 text-white">
+              <h1 className="text-3xl md:text-4xl font-bold">Add Room Type</h1>
+              <p className="mt-4 text-lg max-w-2xl">
+                Create a new room type for your hotel with detailed information.
+              </p>
+            </div>
+          </div>
+
+          {/* Notifications */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <AlertCircle className="h-5 w-5 mr-3 text-red-500" />
+              <p>{error}</p>
             </div>
           )}
+          
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6 flex items-center">
+              <CheckCircle2 className="h-5 w-5 mr-3 text-green-500" />
+              <p>{success}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 space-y-6">
+            {/* Room Name */}
+            <div>
+              <label className="block mb-2 font-semibold">Room Name</label>
+              <div className="flex items-center space-x-3">
+                <Bed className="h-6 w-6 text-primary" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. Deluxe Twin, Executive Suite"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Amenities */}
+            <div>
+              <label className="block mb-2 font-semibold">Amenities</label>
+              <div className="flex items-center space-x-3">
+                <Key className="h-6 w-6 text-primary" />
+                <input
+                  type="text"
+                  name="amenities"
+                  placeholder="WiFi, TV, Air Conditioning (comma separated)"
+                  value={formData.amenities}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                />
+              </div>
+              <p className="text-xs text-muted mt-1">Separate multiple amenities with commas</p>
+            </div>
+
+            {/* Price Per Night */}
+            <div>
+              <label className="block mb-2 font-semibold">Price Per Night</label>
+              <div className="flex items-center space-x-3">
+                <DollarSign className="h-6 w-6 text-primary" />
+                <input
+                  type="number"
+                  name="pricePerNight"
+                  placeholder="Enter room price"
+                  value={formData.pricePerNight}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Room Images Upload */}
+            <div>
+              <label className="block mb-2 font-semibold">Room Images (max 5)</label>
+              <div className="flex items-center space-x-3 mb-4">
+                <Upload className="h-6 w-6 text-primary" />
+                <input
+                  type="file"
+                  name="images"
+                  onChange={handleImagesChange}
+                  className="input input-bordered w-full"
+                  accept="image/*"
+                  multiple
+                  disabled={formData.images.length >= 5}
+                />
+              </div>
+              {uploading && <p className="text-sm text-muted mb-2">Uploading images...</p>}
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {formData.images.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Room image ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Available Rooms */}
+            <div>
+              <label className="block mb-2 font-semibold">Total Available Rooms</label>
+              <div className="flex items-center space-x-3">
+                <PlusCircle className="h-6 w-6 text-primary" />
+                <input
+                  type="number"
+                  name="availableRooms"
+                  placeholder="Number of rooms of this type"
+                  value={formData.availableRooms}
+                  onChange={handleChange}
+                  className="input input-bordered w-full"
+                  required
+                  min="1"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button 
+              type="submit" 
+              className="btn btn-primary w-full flex items-center justify-center"
+            >
+              <PlusCircle className="h-5 w-5 mr-2" /> Add Room Type
+            </button>
+          </form>
         </div>
-        <input
-          type="number"
-          name="availableRooms"
-          placeholder="Total Available Rooms"
-          value={formData.availableRooms}
-          onChange={handleChange}
-          className="input input-bordered w-full"
-          required
-        />
-        <button type="submit" className="btn btn-primary w-full">
-          Add Room Type
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
