@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Calendar, MapPin, Star, Search } from 'lucide-react';
 import OSMMap from './OSMMap';
-import { Calendar, MapPin, Star, Search, Users } from 'lucide-react';
 
 interface Hotel {
   id: number;
@@ -68,6 +68,21 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [citySuggestions, setCitySuggestions] = useState<Suggestion[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check auth status on mount.
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/status', { credentials: 'include' });
+        const data = await res.json();
+        setIsLoggedIn(data.loggedIn);
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   // Fetch city suggestions from the backend endpoint
   const fetchCitySuggestions = async (query: string): Promise<Suggestion[]> => {
@@ -165,7 +180,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 onChange={handleCityChange}
                 className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
-                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
+                style={{ paddingLeft: '2.5rem' }}
               />
               {citySuggestions.length > 0 && (
                 <div className="absolute w-full" style={{ top: '100%', left: 0 }}>
@@ -187,7 +202,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
               )}
             </div>
             
-            {/* Check-in date input - Fixed icon positioning */}
+            {/* Check-in date input */}
             <div className="relative flex items-center">
               <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <Calendar className="h-5 w-5 text-muted" />
@@ -199,11 +214,11 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 onChange={(e) => setCheckIn(e.target.value)}
                 className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
-                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
+                style={{ paddingLeft: '2.5rem' }}
               />
             </div>
             
-            {/* Check-out date input - Fixed icon positioning */}
+            {/* Check-out date input */}
             <div className="relative flex items-center">
               <div className="absolute left-3 flex items-center pointer-events-none z-10">
                 <Calendar className="h-5 w-5 text-muted" />
@@ -215,7 +230,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 onChange={(e) => setCheckOut(e.target.value)}
                 className="input input-bordered w-full pl-16 focus:pl-16 bg-background text-foreground"
                 required
-                style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
+                style={{ paddingLeft: '2.5rem' }}
               />
             </div>
             
@@ -255,14 +270,14 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                   value={starRating}
                   onChange={(e) => setStarRating(e.target.value)}
                   className="input input-bordered w-full pl-16 focus:pl-16 appearance-none bg-background text-foreground"
-                  style={{ paddingLeft: '2.5rem' }} /* Extra padding to ensure no overlap */
+                  style={{ paddingLeft: '2.5rem' }}
                 >
-                  <option value="" className="bg-background text-foreground">Any Rating</option>
-                  <option value="5" className="bg-background text-foreground">5 Stars</option>
-                  <option value="4" className="bg-background text-foreground">4+ Stars</option>
-                  <option value="3" className="bg-background text-foreground">3+ Stars</option>
-                  <option value="2" className="bg-background text-foreground">2+ Stars</option>
-                  <option value="1" className="bg-background text-foreground">1+ Stars</option>
+                  <option value="">Any Rating</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4+ Stars</option>
+                  <option value="3">3+ Stars</option>
+                  <option value="2">2+ Stars</option>
+                  <option value="1">1+ Stars</option>
                 </select>
               </div>
               
@@ -328,12 +343,21 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                     </div>
                     
                     <div className="mt-4">
-                      <Link 
-                        href={`/hotels/${hotel.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}
-                        className="btn-primary w-full block text-center"
-                      >
-                        View Details
-                      </Link>
+                      {isLoggedIn ? (
+                        <Link 
+                          href={`/hotels/${hotel.id}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}
+                          className="btn-primary w-full block text-center"
+                        >
+                          View Details
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => setError("You must log in to view hotel details.")}
+                          className="btn-primary w-full block text-center"
+                        >
+                          View Details
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
