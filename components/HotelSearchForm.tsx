@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Star, Search } from 'lucide-react';
+import { Calendar, MapPin, Star, Search, AlertTriangle, LogIn } from 'lucide-react';
 import OSMMap from './OSMMap';
 
 interface Hotel {
@@ -69,6 +69,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [citySuggestions, setCitySuggestions] = useState<Suggestion[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Check auth status on mount.
   useEffect(() => {
@@ -83,6 +84,26 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
     }
     checkAuth();
   }, []);
+
+  // Clear auth error when user scrolls or after a timeout
+  useEffect(() => {
+    if (authError) {
+      const timer = setTimeout(() => {
+        setAuthError(null);
+      }, 5000);
+      
+      const handleScroll = () => {
+        setAuthError(null);
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [authError]);
 
   // Fetch city suggestions from the backend endpoint
   const fetchCitySuggestions = async (query: string): Promise<Suggestion[]> => {
@@ -129,6 +150,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setAuthError(null);
     setResults(null);
 
     if (!city || !checkIn || !checkOut) {
@@ -163,9 +185,34 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
     }
   };
 
+  const handleViewDetails = (hotelId: number) => {
+    if (!isLoggedIn) {
+      setAuthError("You must log in to view hotel details");
+      // Scroll to the top where the error will be displayed
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="bg-card rounded-xl shadow-md p-4 md:p-6">
+      <div className="bg-card rounded-xl shadow-md p-4 md:p-6 relative">
+        {/* Authentication error message at the top */}
+        {authError && (
+          <div className="absolute top-0 left-0 right-0 p-3 bg-destructive text-white z-50 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <span>{authError}</span>
+            </div>
+            <button 
+              onClick={() => setAuthError(null)} 
+              className="text-white hover:text-white/80"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* City input with autocomplete suggestions */}
@@ -352,10 +399,11 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                         </Link>
                       ) : (
                         <button
-                          onClick={() => setError("You must log in to view hotel details.")}
-                          className="btn-primary w-full block text-center"
+                          onClick={() => handleViewDetails(hotel.id)}
+                          className="btn-destructive w-full block text-center flex items-center justify-center"
                         >
-                          View Details
+                          <LogIn className="h-4 w-4 mr-2" />
+                          Login to View
                         </button>
                       )}
                     </div>
