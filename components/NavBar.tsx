@@ -5,7 +5,15 @@ import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import NotificationDropdown from './NotificationDropdown';
 import ThemeToggle from './ThemeToggle';
-import { User, ShoppingCart, LogOut, Hotel, Plane, Book, ChevronDown } from 'lucide-react';
+import {
+  User,
+  ShoppingCart,
+  LogOut,
+  Compass,
+  Hotel,
+  Book,
+  ChevronDown,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const NavBar: React.FC = () => {
@@ -122,26 +130,23 @@ const NavBar: React.FC = () => {
             {user ? (
               <>
                 <Link
-                  href="/search/hotels"
+                  href="/bookings"
                   className="text-foreground hover:text-primary flex items-center"
                 >
-                  <Hotel size={18} className="mr-1" />
-                  <span>Hotels</span>
-                </Link>
-                <Link
-                  href="/search/flights"
-                  className="text-foreground hover:text-primary flex items-center"
-                >
-                  <Plane size={18} className="mr-1" />
-                  <span>Flights</span>
+                  <Compass size={18} className="mr-1" />
+                  <span>Book Itinerary</span>
                 </Link>
 
                 <div className="border-l h-6 border-border mx-2"></div>
 
                 <NotificationDropdown />
 
-                <Link href="/hotels/management" className="text-foreground hover:text-primary">
-                  Hotel Management
+                <Link
+                  href="/hotels/management"
+                  className="text-foreground hover:text-primary flex items-center"
+                >
+                  <Hotel size={18} className="mr-1" />
+                  <span>Hotel Management</span>
                 </Link>
 
                 <Link
@@ -199,7 +204,6 @@ const NavBar: React.FC = () => {
                         Logout
                       </span>
                     </button>
-
                     <div className="px-4 py-2 flex items-center justify-between border-t border-border">
                       <span className="text-sm text-muted">Theme</span>
                       <ThemeToggle />
@@ -210,18 +214,11 @@ const NavBar: React.FC = () => {
             ) : (
               <>
                 <Link
-                  href="/search/hotels"
+                  href="/bookings"
                   className="text-foreground hover:text-primary flex items-center"
                 >
-                  <Hotel size={18} className="mr-1" />
-                  <span>Hotels</span>
-                </Link>
-                <Link
-                  href="/search/flights"
-                  className="text-foreground hover:text-primary flex items-center"
-                >
-                  <Plane size={18} className="mr-1" />
-                  <span>Flights</span>
+                  <Compass size={18} className="mr-1" />
+                  <span>Book Itinerary</span>
                 </Link>
 
                 <div className="border-l h-6 border-border mx-2"></div>
@@ -244,11 +241,9 @@ const NavBar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-card shadow-lg rounded-b-lg">
           <div className="pt-2 pb-4 space-y-1 px-4">
-            <Link href="/search/hotels" className="block py-2 text-foreground hover:text-primary">
-              Hotels
-            </Link>
-            <Link href="/search/flights" className="block py-2 text-foreground hover:text-primary">
-              Flights
+            <Link href="/bookings" className="block py-2 text-foreground hover:text-primary">
+              <Compass size={18} className="mr-1 inline" />
+              <span>Book Itinerary</span>
             </Link>
 
             {user ? (
@@ -256,15 +251,17 @@ const NavBar: React.FC = () => {
                 <div className="border-t border-border my-2"></div>
                 <Link
                   href="/hotels/management"
-                  className="block py-2 text-foreground hover:text-primary"
+                  className="block py-2 text-foreground hover:text-primary flex items-center"
                 >
-                  Hotel Management
+                  <Hotel size={18} className="mr-1" />
+                  <span>Hotel Management</span>
                 </Link>
                 <Link
                   href="/bookings/user"
-                  className="block py-2 text-foreground hover:text-primary"
+                  className="block py-2 text-foreground hover:text-primary flex items-center"
                 >
-                  My Bookings
+                  <Book size={18} className="mr-1" />
+                  <span>My Bookings</span>
                 </Link>
                 {/* Mobile Notification Dropdown */}
                 <div className="block py-2">
