@@ -1,17 +1,55 @@
-
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const handleQuickSearch = (type: 'flights' | 'hotels') => {
+    // Navigate to home page with correct tab and smooth scroll
+    router.push(`/?tab=${type}`);
+    
+    // Ensure smooth scroll to top
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleMyBookings = () => {
+    // If user is logged in, route to bookings page
+    if (user) {
+      router.push('/bookings/user');
+      
+      // Ensure smooth scroll to top
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    } else {
+      // If not logged in, scroll to top of the page
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+    }
+  };
+
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto py-12 px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="font-bold text-xl text-primary">
+            <Link 
+              href="/" 
+              className="font-bold text-xl text-primary"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
               FlyNext
             </Link>
             <p className="mt-4 text-muted">
@@ -38,22 +76,35 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/search/hotels" className="text-muted hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleQuickSearch('hotels')} 
+                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                >
                   Search Hotels
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="/search/flights" className="text-muted hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleQuickSearch('flights')} 
+                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                >
                   Search Flights
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="/bookings/user" className="text-muted hover:text-primary transition-colors">
+                <button 
+                  onClick={handleMyBookings} 
+                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                >
                   My Bookings
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="/hotels/management" className="text-muted hover:text-primary transition-colors">
+                <Link 
+                  href="/hotels/management" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-muted hover:text-primary transition-colors"
+                >
                   Hotel Management
                 </Link>
               </li>
@@ -61,26 +112,15 @@ const Footer: React.FC = () => {
           </div>
           
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">Verify</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/bookings/verifyFlight" className="text-muted hover:text-primary transition-colors">
+                <Link 
+                  href="/bookings/verifyFlight" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-muted hover:text-primary transition-colors"
+                >
                   Verify Flight
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
-                  FAQs
                 </Link>
               </li>
             </ul>
@@ -90,22 +130,29 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
+                <Link 
+                  href="/terms-and-conditions" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-muted hover:text-primary transition-colors"
+                >
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
+                <Link 
+                  href="/privacy-policy" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-muted hover:text-primary transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
-                  Cookie Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted hover:text-primary transition-colors">
+                <Link 
+                  href="/accessibility" 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-muted hover:text-primary transition-colors"
+                >
                   Accessibility
                 </Link>
               </li>
