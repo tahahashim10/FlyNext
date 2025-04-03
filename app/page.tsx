@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import FlightSearchForm from '../components/FlightSearchForm';
 import HotelSearchForm from '../components/HotelSearchForm';
+import Footer from '../components/Footer';
 import { Plane, Hotel } from 'lucide-react';
 import CookiePolicyModal from '../components/CookiePolicyModal';
 import Link from 'next/link';
@@ -160,113 +161,7 @@ export default function HomePage() {
       </div>
       
       {/* Footer */}
-      <footer className="bg-card border-t border-border mt-auto">
-        <div className="container mx-auto py-10 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-lg mb-4">FlyNext</h3>
-              <p className="text-muted">Your trusted travel companion for hotels and flights worldwide.</p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link 
-                    href="/?tab=hotels" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Search Hotels
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/?tab=flights" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Search Flights
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/bookings/user" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    My Bookings
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/hotels/management" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Hotel Management
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Verify</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link 
-                    href="/bookings/verifyFlight" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Verify Flight
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link 
-                    href="/terms-and-conditions" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Terms & Conditions
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/privacy-policy" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/accessibility" 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted hover:text-primary"
-                  >
-                    Accessibility
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-border mt-8 pt-8 text-sm text-center text-muted">
-            <p>&copy; {new Date().getFullYear()} FlyNext. All rights reserved.</p>
-            <p className="mt-1">
-              Designed with <span className="text-primary">♥</span> for travelers around the world.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <CookiePolicyModal />
     </div>

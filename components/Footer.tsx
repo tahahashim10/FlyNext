@@ -11,10 +11,7 @@ const Footer: React.FC = () => {
   const { user } = useAuth();
 
   const handleQuickSearch = (type: 'flights' | 'hotels') => {
-    // Navigate to home page with correct tab and smooth scroll
     router.push(`/?tab=${type}`);
-    
-    // Ensure smooth scroll to top
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
@@ -22,17 +19,13 @@ const Footer: React.FC = () => {
   };
 
   const handleMyBookings = () => {
-    // If user is logged in, route to bookings page
     if (user) {
       router.push('/bookings/user');
-      
-      // Ensure smooth scroll to top
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     } else {
-      // If not logged in, scroll to top of the page
       window.scrollTo({ 
         top: 0, 
         behavior: 'smooth' 
@@ -42,21 +35,22 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="bg-card border-t border-border">
-      <div className="container mx-auto py-12 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+      <div className="container mx-auto py-10 px-4">
+        <div className="grid grid-cols-3 gap-4 max-w-5xl mx-auto items-start">
+          {/* Left Column - FlyNext */}
+          <div className="pl-4">
             <Link 
               href="/" 
-              className="font-bold text-xl text-primary"
+              className="font-bold text-xl text-primary block mb-2"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               FlyNext
             </Link>
-            <p className="mt-4 text-muted">
+            <p className="text-muted text-sm pr-4">
               Your trusted travel companion for hotels and flights worldwide.
             </p>
             
-            <div className="mt-6 flex space-x-4">
+            <div className="mt-4 flex space-x-3">
               <a href="#" className="text-muted hover:text-primary transition-colors">
                 <Facebook className="h-5 w-5" />
               </a>
@@ -72,13 +66,14 @@ const Footer: React.FC = () => {
             </div>
           </div>
           
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+          {/* Center Column - Quick Links */}
+          <div className="text-center">
+            <h4 className="font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2">
               <li>
                 <button 
                   onClick={() => handleQuickSearch('hotels')} 
-                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                  className="text-muted hover:text-primary transition-colors"
                 >
                   Search Hotels
                 </button>
@@ -86,7 +81,7 @@ const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={() => handleQuickSearch('flights')} 
-                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                  className="text-muted hover:text-primary transition-colors"
                 >
                   Search Flights
                 </button>
@@ -94,40 +89,17 @@ const Footer: React.FC = () => {
               <li>
                 <button 
                   onClick={handleMyBookings} 
-                  className="text-muted hover:text-primary transition-colors w-full text-left"
+                  className="text-muted hover:text-primary transition-colors"
                 >
                   My Bookings
                 </button>
               </li>
-              <li>
-                <Link 
-                  href="/hotels/management" 
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="text-muted hover:text-primary transition-colors"
-                >
-                  Hotel Management
-                </Link>
-              </li>
             </ul>
           </div>
           
-          <div>
-            <h4 className="font-semibold mb-4">Verify</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link 
-                  href="/bookings/verifyFlight" 
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="text-muted hover:text-primary transition-colors"
-                >
-                  Verify Flight
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+          {/* Right Column - Legal */}
+          <div className="text-right">
+            <h4 className="font-semibold mb-3">Legal</h4>
             <ul className="space-y-2">
               <li>
                 <Link 
@@ -160,7 +132,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         
-        <div className="border-t border-border mt-8 pt-8 text-sm text-center text-muted">
+        <div className="border-t border-border mt-6 pt-4 text-sm text-center text-muted">
           <p>&copy; {new Date().getFullYear()} FlyNext. All rights reserved.</p>
           <p className="mt-1">
             Designed with <span className="text-primary">♥</span> for travelers around the world.
