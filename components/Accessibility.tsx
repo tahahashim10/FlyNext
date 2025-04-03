@@ -8,8 +8,7 @@ import {
   Keyboard, 
   Users, 
   HeartPulse, 
-  Type, 
-  Contrast 
+  Type 
 } from 'lucide-react';
 
 const Accessibility: React.FC = () => {
@@ -32,7 +31,7 @@ const Accessibility: React.FC = () => {
           </div>
 
           <div className="space-y-8">
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Eye className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">Visual Accessibility</h2>
@@ -40,13 +39,12 @@ const Accessibility: React.FC = () => {
               <ul className="list-disc list-inside text-muted space-y-2">
                 <li>High contrast mode available</li>
                 <li>Screen reader compatible</li>
-                <li>Text resizing support</li>
                 <li>Alternative text for images</li>
                 <li>Color-blind friendly design</li>
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Keyboard className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">Keyboard Navigation</h2>
@@ -59,20 +57,19 @@ const Accessibility: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Users className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">Inclusive Design</h2>
               </div>
               <ul className="list-disc list-inside text-muted space-y-2">
-                <li>Language support for multiple regions</li>
                 <li>Simple and clear language</li>
                 <li>Consistent navigation</li>
                 <li>Cultural sensitivity in design</li>
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Type className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">Text and Typography</h2>
@@ -80,12 +77,11 @@ const Accessibility: React.FC = () => {
               <ul className="list-disc list-inside text-muted space-y-2">
                 <li>Readable font sizes</li>
                 <li>Sufficient color contrast</li>
-                <li>Adjustable text spacing</li>
                 <li>Sans-serif font for better readability</li>
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <HeartPulse className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">Assistive Technology</h2>
@@ -98,16 +94,15 @@ const Accessibility: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
-                <Contrast className="text-primary mr-3 h-8 w-8" />
-                <h2 className="text-2xl font-semibold">Customization Options</h2>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-primary mr-3 h-8 w-8">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                <h2 className="text-2xl font-semibold">Display Options</h2>
               </div>
               <ul className="list-disc list-inside text-muted space-y-2">
                 <li>Dark and light mode</li>
-                <li>Font size adjustment</li>
-                <li>Color scheme customization</li>
-                <li>Motion reduction settings</li>
               </ul>
             </section>
           </div>

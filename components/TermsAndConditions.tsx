@@ -24,7 +24,7 @@ const TermsAndConditions: React.FC = () => {
           </div>
 
           <div className="space-y-8">
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Shield className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">1. Acceptance of Terms</h2>
@@ -35,7 +35,7 @@ const TermsAndConditions: React.FC = () => {
               </p>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <FileText className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">2. User Accounts</h2>
@@ -47,7 +47,7 @@ const TermsAndConditions: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Globe className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">3. Booking Policies</h2>
@@ -62,7 +62,7 @@ const TermsAndConditions: React.FC = () => {
               </ul>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <Lock className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">4. Privacy & Data</h2>
@@ -73,7 +73,7 @@ const TermsAndConditions: React.FC = () => {
               </p>
             </section>
 
-            <section className="bg-card rounded-xl p-6 shadow-sm">
+            <section className="bg-card rounded-xl p-6 shadow-lg border border-border hover:shadow-card transition-shadow">
               <div className="flex items-center mb-4">
                 <UserCheck className="text-primary mr-3 h-8 w-8" />
                 <h2 className="text-2xl font-semibold">5. User Responsibilities</h2>
