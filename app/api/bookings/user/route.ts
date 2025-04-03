@@ -119,7 +119,6 @@ async function callAfsCancelBooking(booking: { flightBookingReference: string | 
   return res.json();
 }
 
-
 // POST endpoint for creating bookings (U15)
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const tokenData = await verifyToken(request);
@@ -172,10 +171,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!Array.isArray(flightIds)) {
         return NextResponse.json({ error: "flightIds must be an array." }, { status: 400 });
       }
-      // Enforce single flight booking: only one flightId is allowed.
-      if (flightIds.length !== 1) {
-        return NextResponse.json({ error: "Only one flight can be booked at a time." }, { status: 400 });
-      }
+      
+      // Removed the single flight validation - now allowing multiple flights
+      
       if (flightIds.length > 0) {
         if (!firstName || typeof firstName !== "string" || firstName.trim() === "") {
           return NextResponse.json({ error: "firstName is required and must be a non-empty string for flight booking." }, { status: 400 });
@@ -252,7 +250,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
     
-    let flightBooking = null;
+    let flightBookings = [];
     if (isFlightBookingRequested) {
       const baseUrl = process.env.AFS_BASE_URL as string;
       const apiKey = process.env.AFS_API_KEY as string;
@@ -260,8 +258,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "AFS API configuration is missing" }, { status: 500 });
       }
       
-      let totalFlightCost = 0;
+      // Create a separate booking for each flight
       for (const flightId of flightIds) {
+        // Fetch flight details from AFS
         const url = new URL(`/api/flights/${flightId}`, baseUrl);
         const res = await fetch(url.toString(), {
           headers: { "x-api-key": apiKey },
@@ -273,30 +272,41 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (flightData.status !== "SCHEDULED") {
           return NextResponse.json({ error: `Flight ${flightId} is not scheduled.` }, { status: 400 });
         }
-        totalFlightCost += flightData.price;
+        
+        // Create individual flight booking
+        const singleFlightBooking = await prisma.flightBooking.create({
+          data: {
+            userId,
+            flightIds: [flightId], // Single flight ID per booking
+            firstName,
+            lastName,
+            email,
+            passportNumber,
+            status: status || "PENDING",
+            cost: flightData.price, // Cost for this specific flight
+          },
+        });
+        
+        flightBookings.push(singleFlightBooking);
       }
       
-      flightBooking = await prisma.flightBooking.create({
-        data: {
-          userId,
-          flightIds, // stored as JSON
-          firstName,
-          lastName,
-          email,
-          passportNumber,
-          status: status || "PENDING",
-          cost: totalFlightCost,
-        },
-      });
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: "Your flight reservation is currently pending. Complete the payment process to secure your seat(s).",
-        },
-      });
+      // Send a notification for the flight bookings
+      if (flightBookings.length > 0) {
+        const flightCount = flightBookings.length;
+        await prisma.notification.create({
+          data: {
+            userId,
+            message: `${flightCount} flight ${flightCount > 1 ? 'reservations have' : 'reservation has'} been added to your cart. Complete the payment process to secure your booking.`,
+          },
+        });
+      }
     }
     
-    return NextResponse.json({ hotelBooking, flightBooking }, { status: 201 });
+    return NextResponse.json({ 
+      hotelBooking, 
+      flightBooking: flightBookings.length === 1 ? flightBookings[0] : null,
+      flightBookings: flightBookings.length > 1 ? flightBookings : null
+    }, { status: 201 });
   } catch (error: any) {
     console.error("Booking Error:", error.stack);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });

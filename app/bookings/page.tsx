@@ -40,7 +40,10 @@ export default function BookingFormPage() {
   const [showHotelSuggestions, setShowHotelSuggestions] = useState(false);
   const [showRoomSuggestions, setShowRoomSuggestions] = useState(false);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
-  const [activeTab, setActiveTab] = useState<'hotel' | 'flight'>('hotel');
+
+  // Use the query param "tab" to set the initial active tab.
+  const initialTab = searchParams.get('tab') === 'flight' ? 'flight' : 'hotel';
+  const [activeTab, setActiveTab] = useState<'hotel' | 'flight'>(initialTab);
   
   // State for city autocomplete (for destinationCity)
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -52,12 +55,15 @@ export default function BookingFormPage() {
   useEffect(() => {
     async function fetchFlightDestination() {
       const trimmedIds = bookingData.flightIds.trim();
-      // Optionally, only fetch when flight id is longer than a threshold (e.g., 8 characters)
-      if (trimmedIds.length >= 8) {
-        // Use the first flight id if there are multiple ids
-        const flightId = trimmedIds.split(',')[0].trim();
+      // Only fetch when flight id is not empty
+      if (trimmedIds.length > 0) {
+        // Use the last flight id if there are multiple ids
+        const flightIdArray = trimmedIds.split(',').map(id => id.trim()).filter(Boolean);
+        // Get the last flight ID, which is the destination flight
+        const lastFlightId = flightIdArray[flightIdArray.length - 1];
+        
         try {
-          const res = await fetch(`/api/flights/${flightId}`);
+          const res = await fetch(`/api/flights/${lastFlightId}`);
           if (res.ok) {
             const flightData = await res.json();
             // Check that flightData and its destination exist before accessing city
@@ -78,7 +84,6 @@ export default function BookingFormPage() {
     fetchFlightDestination();
   }, [bookingData.flightIds]);
   
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBookingData({ ...bookingData, [e.target.name]: e.target.value });
     
@@ -178,7 +183,7 @@ export default function BookingFormPage() {
     setError('');
     setSuccess('');
     setLoading(true);
-
+  
     // Build payload based on provided details.
     const payload: any = {};
     if (bookingData.hotelId && bookingData.roomId) {
@@ -199,15 +204,15 @@ export default function BookingFormPage() {
       payload.email = bookingData.email;
       payload.passportNumber = bookingData.passportNumber;
     }
-
+  
     console.log("Booking payload:", payload);
-
-    if (!payload.hotelId && !payload.flightIds) {
+  
+    if (!payload.hotelId && (!payload.flightIds || payload.flightIds.length === 0)) {
       setError('Please provide either hotel or flight booking details.');
       setLoading(false);
       return;
     }
-
+  
     try {
       const res = await fetch('/api/bookings/user', {
         method: 'POST',
@@ -215,32 +220,50 @@ export default function BookingFormPage() {
         body: JSON.stringify(payload),
         credentials: 'include'
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        console.error("Error response:", data);
-        setError(data.error || 'Failed to create booking');
-        setLoading(false);
-      } else {
-        const data = await res.json();
-        if (data.flightBooking && data.hotelBooking) {
-          setSuccess('Bookings added to your cart!');
-        } else if (data.flightBooking || data.hotelBooking) {
-          setSuccess('Booking added to your cart!');
-        } else {
-          setError('Unexpected booking response');
-          setLoading(false);
-          return;
+  
+      // For all responses, try to get the body content as text first
+      const responseText = await res.text();
+      console.log(`API Response (${res.status}):`, responseText);
+      
+      // Parse as JSON if possible
+      let responseData;
+      try {
+        if (responseText && responseText.trim() !== '') {
+          responseData = JSON.parse(responseText);
+          console.log("Parsed response data:", responseData);
         }
-        clearForm();
-        setLoading(false);
+      } catch (parseError) {
+        console.error("Response is not valid JSON:", parseError);
+        // Keep the raw text in responseText
+      }
+  
+      if (!res.ok) {
+        // Error case: either use the parsed JSON error or the raw text
+        let errorMessage;
         
-        // Scroll to top to see success message
+        if (responseData && responseData.error) {
+          // JSON response with error property
+          errorMessage = responseData.error;
+        } else if (responseText && responseText.trim() !== '') {
+          // Use the raw text if it's not empty
+          errorMessage = responseText;
+        } else {
+          // Fallback to status code and text
+          errorMessage = `Failed to create booking (${res.status} ${res.statusText})`;
+        }
+        
+        setError(errorMessage);
+      } else {
+        // Success case
+        setSuccess('Booking added to your cart!');
+        clearForm();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+      
+      setLoading(false);
     } catch (err: any) {
-      console.error("Booking submission error:", err);
-      setError('Error creating booking');
+      console.error("Network or processing error:", err);
+      setError('Error creating booking: ' + (err.message || 'Unknown error'));
       setLoading(false);
     }
   };
@@ -436,7 +459,6 @@ export default function BookingFormPage() {
                             }
                           }}
                           onBlur={() => {
-                            // Delay hiding to allow click to register
                             setTimeout(() => setShowCitySuggestions(false), 200);
                           }}
                         />
@@ -474,40 +496,36 @@ export default function BookingFormPage() {
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <label className="block text-sm font-medium mb-1">Departure City</label>
-                        <div className="relative">
-                          <div className="relative flex items-center">
-                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none z-10">
-                              <Plane className="h-5 w-5 text-muted transform -rotate-45" />
-                            </div>
-                            <input
-                              type="text"
-                              name="departureCity"
-                              placeholder="e.g. Toronto"
-                              value={bookingData.departureCity}
-                              onChange={handleChange}
-                              onFocus={() => {
-                                if (bookingData.departureCity.trim().length >= 2) {
-                                  setShowDepartureCitySuggestions(true);
-                                }
-                              }}
-                              onBlur={() => {
-                                // Delay hiding to allow click on suggestion to register
-                                setTimeout(() => setShowDepartureCitySuggestions(false), 200);
-                              }}
-                              className="input input-bordered w-full pl-16 focus:pl-16"
-                              style={{ paddingLeft: '2.5rem' }}
-                            />
+                        <div className="relative flex items-center">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none z-10">
+                            <Plane className="h-5 w-5 text-muted transform -rotate-45" />
                           </div>
-                          {/* City suggestions dropdown for departure city */}
-                          <CitySuggestionsDropdown
-                            query={bookingData.departureCity}
-                            visible={showDepartureCitySuggestions}
-                            onSelect={(city) => {
-                              setBookingData({ ...bookingData, departureCity: city });
-                              setShowDepartureCitySuggestions(false);
+                          <input
+                            type="text"
+                            name="departureCity"
+                            placeholder="e.g. Toronto"
+                            value={bookingData.departureCity}
+                            onChange={handleChange}
+                            onFocus={() => {
+                              if (bookingData.departureCity.trim().length >= 2) {
+                                setShowDepartureCitySuggestions(true);
+                              }
                             }}
+                            onBlur={() => {
+                              setTimeout(() => setShowDepartureCitySuggestions(false), 200);
+                            }}
+                            className="input input-bordered w-full pl-16 focus:pl-16"
+                            style={{ paddingLeft: '2.5rem' }}
                           />
                         </div>
+                        <CitySuggestionsDropdown
+                          query={bookingData.departureCity}
+                          visible={showDepartureCitySuggestions}
+                          onSelect={(city) => {
+                            setBookingData({ ...bookingData, departureCity: city });
+                            setShowDepartureCitySuggestions(false);
+                          }}
+                        />
                       </div>
                       <div className="mt-6">
                         <button
@@ -531,7 +549,6 @@ export default function BookingFormPage() {
                       </div>
                     </div>
                     
-                    {/* Always show flight suggestions when the flag is true */}
                     {showFlightSuggestions && (
                       <div className="border border-border rounded-lg bg-card mt-4">
                         <FlightSuggestionsPanel
@@ -554,7 +571,7 @@ export default function BookingFormPage() {
               {activeTab === 'flight' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Flight ID</label>
+                    <label className="block text-sm font-medium mb-1">Flight IDs</label>
                     <div className="relative flex items-center">
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center pointer-events-none z-10">
                         <Plane className="h-5 w-5 text-muted" />
@@ -562,13 +579,19 @@ export default function BookingFormPage() {
                       <input
                         type="text"
                         name="flightIds"
-                        placeholder="Enter Flight ID"
+                        placeholder="Enter Flight IDs (comma-separated for multi-leg journeys)"
                         value={bookingData.flightIds}
                         onChange={handleChange}
                         className="input input-bordered w-full pl-16 focus:pl-16"
                         style={{ paddingLeft: '2.5rem' }}
                       />
                     </div>
+                    {bookingData.flightIds.includes(',') && (
+                      <div className="mt-2 text-xs text-primary font-medium flex items-center">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Multiple flight IDs detected. Using the last flight for destination city autofill.
+                      </div>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -674,7 +697,6 @@ export default function BookingFormPage() {
                               }
                             }}
                             onBlur={() => {
-                              // Delay hiding to allow click to register
                               setTimeout(() => setShowCitySuggestionsFlightTab(false), 200);
                             }}
                           />
@@ -701,43 +723,30 @@ export default function BookingFormPage() {
                           Find Hotels
                         </button>
                       </div>
-                      
-                      {bookingData.destinationCity.trim() !== '' && showHotelSuggestions && (
-                        <div className="border border-border rounded-lg bg-card mt-2">
-                          <HotelSuggestionsPanel
-                            query={bookingData.destinationCity}
-                            onSelect={(selectedId) => {
-                              setBookingData({ ...bookingData, hotelId: selectedId.toString() });
-                              setActiveTab('hotel'); // Switch to hotel tab
-                              setShowHotelSuggestions(false);
-                            }}
-                          />
-                        </div>
-                      )}
                     </div>
+                  </div>
+                  
+                  {/* Submit button */}
+                  <div className="pt-4 border-t border-border">
+                    <button 
+                      type="submit" 
+                      className="btn-primary w-full h-12 flex items-center justify-center text-lg"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                          Processing Booking...
+                        </>
+                      ) : (
+                        <>
+                          Complete Booking
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Submit button */}
-              <div className="pt-4 border-t border-border">
-                <button 
-                  type="submit" 
-                  className="btn-primary w-full h-12 flex items-center justify-center text-lg"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                      Processing Booking...
-                    </>
-                  ) : (
-                    <>
-                      Complete Booking
-                    </>
-                  )}
-                </button>
-              </div>
             </form>
           </div>
         </div>
@@ -761,7 +770,7 @@ export default function BookingFormPage() {
           <div className="text-center p-6 rounded-lg border border-border hover:shadow-card transition-shadow">
             <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8 text-primary">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
             <h3 className="text-xl font-semibold mb-2">Secure Booking</h3>
