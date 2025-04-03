@@ -1,9 +1,7 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Bell } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 
 interface Notification {
   id: number;
@@ -16,6 +14,7 @@ const NotificationDropdown: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const notificationsPerPage = 5;
 
   const fetchNotifications = async () => {
@@ -61,6 +60,31 @@ const NotificationDropdown: React.FC = () => {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      setIsMarkingAllRead(true);
+      const res = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ markAllRead: true }),
+      });
+
+      if (res.ok) {
+        // Update all notifications to be read
+        setNotifications((prev) => 
+          prev.map(notif => ({ ...notif, read: true }))
+        );
+      } else {
+        console.error('Failed to mark all notifications as read');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
   // Calculate pagination
   const totalPages = Math.ceil(notifications.length / notificationsPerPage);
   const indexOfLastNotification = currentPage * notificationsPerPage;
@@ -70,6 +94,9 @@ const NotificationDropdown: React.FC = () => {
     indexOfLastNotification
   );
 
+  // Count of unread notifications
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   return (
     <div className="relative">
       <button
@@ -78,9 +105,9 @@ const NotificationDropdown: React.FC = () => {
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
-        {notifications.filter((n) => !n.read).length > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-            {notifications.filter((n) => !n.read).length}
+            {unreadCount}
           </span>
         )}
       </button>
@@ -88,7 +115,26 @@ const NotificationDropdown: React.FC = () => {
       {dropdownOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-card shadow-card rounded-lg z-50 border border-border overflow-hidden">
           <div className="p-4">
-            <h3 className="font-bold text-lg border-b border-border pb-2 mb-3">Notifications</h3>
+            <div className="flex justify-between items-center border-b border-border pb-2 mb-3">
+              <h3 className="font-bold text-lg">Notifications</h3>
+              {unreadCount > 0 && (
+                <button 
+                  onClick={markAllAsRead}
+                  disabled={isMarkingAllRead}
+                  className="text-sm text-primary hover:bg-muted/10 px-2 py-1 rounded-md flex items-center disabled:opacity-50"
+                >
+                  {isMarkingAllRead ? (
+                    <>Marking...</>
+                  ) : (
+                    <>
+                      <Check size={16} className="mr-1" />
+                      Mark all read
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
             {notifications.length === 0 ? (
               <p className="text-sm text-muted py-4 text-center">No notifications.</p>
             ) : (
