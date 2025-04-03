@@ -1,11 +1,15 @@
-
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OSMMap from '../../../components/OSMMap';
-import { MapPin, Star, Calendar, Wifi, Tv, Coffee, Utensils } from 'lucide-react';
+import { 
+  MapPin, Star, Calendar, Wifi, Tv, Coffee, Utensils, 
+  CalendarDays, Search, ArrowRight
+} from 'lucide-react';
+import Modal from '../../../components/Modal';
+import RoomAvailability from '../../../components/RoomAvailability';
 
 interface HotelDetail {
   id: number;
@@ -44,7 +48,9 @@ const getAmenityIcon = (amenity: string) => {
 export default function HotelDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const hotelId = params?.id;
+  
   // Read checkIn and checkOut from the query parameters
   const preCheckIn = searchParams.get('checkIn') || '';
   const preCheckOut = searchParams.get('checkOut') || '';
@@ -52,6 +58,26 @@ export default function HotelDetailPage() {
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
+
+  // Add animation CSS for modal
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes modalIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-modal-in {
+        animation: modalIn 0.2s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -72,6 +98,15 @@ export default function HotelDetailPage() {
 
     fetchHotelDetail();
   }, [hotelId]);
+
+  const handleCheckAvailability = () => {
+    // Open availability modal
+    setIsAvailabilityModalOpen(true);
+  };
+
+  const goToAvailabilityPage = () => {
+    router.push(`/hotels/${hotelId}/rooms${preCheckIn && preCheckOut ? `?checkIn=${preCheckIn}&checkOut=${preCheckOut}` : ''}`);
+  };
 
   if (error) return <div className="p-4 text-red-500">{error}</div>;
   if (!hotel) return <div className="p-4">Loading...</div>;
@@ -130,13 +165,53 @@ export default function HotelDetailPage() {
                     <span className="text-sm">Check-out: {preCheckOut}</span>
                   </div>
                 )}
+                
+                {/* Check Availability button */}
+                <button 
+                  onClick={handleCheckAvailability}
+                  className="mt-3 flex items-center justify-center w-full text-xs bg-primary/10 text-primary hover:bg-primary/20 transition-colors py-1.5 px-2 rounded"
+                >
+                  <Search className="h-3 w-3 mr-1" />
+                  Check Room Availability
+                </button>
               </div>
             )}
           </div>
           
+          {/* Check Availability Section (shown when no dates are provided) */}
+          {(!preCheckIn || !preCheckOut) && (
+            <div className="mt-4 p-4 bg-muted/10 border border-border rounded-lg">
+              <div className="flex items-center text-foreground font-medium mb-2">
+                <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+                Looking for available rooms?
+              </div>
+              <p className="text-sm text-muted mb-3">
+                Check room availability for your travel dates
+              </p>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={handleCheckAvailability}
+                  className="btn-primary text-sm flex items-center"
+                >
+                  Quick Check
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
+                <button
+                  onClick={goToAvailabilityPage}
+                  className="btn-outline text-sm"
+                >
+                  Advanced Search
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Map */}
           {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
-            <div className="mt-4 h-52 rounded-lg overflow-hidden border border-border">
+            <div 
+              className="mt-4 h-52 rounded-lg overflow-hidden border border-border"
+              style={{ position: 'relative', zIndex: 1 }}
+            >
               <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
             </div>
           ) : (
@@ -241,10 +316,12 @@ export default function HotelDetailPage() {
                     </div>
                   </div>
                   
-                  {/* Book Now button */}
-                  <div className="mt-4">
+                  {/* Action buttons */}
+                  <div className="mt-4 flex space-x-2">
+                    {/* Book Now button */}
                     <Link
                       href={`/bookings?hotelId=${hotel.id}&roomId=${room.id}&checkIn=${encodeURIComponent(preCheckIn)}&checkOut=${encodeURIComponent(preCheckOut)}`}
+                      className="flex-1"
                     >
                       <button className="btn-primary w-full flex items-center justify-center">
                         Book Now
@@ -259,6 +336,21 @@ export default function HotelDetailPage() {
           <p className="text-muted p-4 bg-muted/5 rounded-lg text-center">No room types available.</p>
         )}
       </div>
+      
+      {/* Availability Modal */}
+      <Modal 
+        isOpen={isAvailabilityModalOpen} 
+        onClose={() => setIsAvailabilityModalOpen(false)}
+        title="Room Availability"
+        size="lg"
+      >
+        <RoomAvailability 
+          hotelId={hotelId} 
+          initialCheckIn={preCheckIn}
+          initialCheckOut={preCheckOut}
+          isDialog={true}
+        />
+      </Modal>
     </div>
   );
 }

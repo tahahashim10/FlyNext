@@ -363,7 +363,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {results.results.map((hotel) => (
                 <div key={hotel.id} className="card overflow-hidden transition-shadow hover:shadow-card">
-                  <div className="relative h-48">
+                  <div className="relative h-48" style={{ position: 'relative', zIndex: 1 }}>
                     {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
                       <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
                     ) : (
