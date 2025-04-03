@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import { Plane, Hotel } from 'lucide-react';
 import CookiePolicyModal from '../components/CookiePolicyModal';
 import Link from 'next/link';
+import FeaturedHotels from '../components/FeaturedHotels';
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -115,48 +116,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Destinations section */}
+      {/* Featured Hotels section */}
       <div className="bg-muted/5 py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center mb-10">Popular Destinations</h2>
+          <h2 className="text-2xl font-bold text-center mb-10">Top Rated Hotels</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
-              <img src="/paris.jpg" alt="Paris" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="font-semibold text-lg">Paris</h3>
-                <p className="text-sm text-white/80">France</p>
-              </div>
-            </div>
-            
-            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
-              <img src="/new-york.jpg" alt="New York" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="font-semibold text-lg">New York</h3>
-                <p className="text-sm text-white/80">United States</p>
-              </div>
-            </div>
-            
-            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
-              <img src="/tokyo.jpg" alt="Tokyo" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="font-semibold text-lg">Tokyo</h3>
-                <p className="text-sm text-white/80">Japan</p>
-              </div>
-            </div>
-            
-            <div className="relative rounded-lg overflow-hidden h-48 group cursor-pointer">
-              <img src="/dubai.jpg" alt="Dubai" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="font-semibold text-lg">Dubai</h3>
-                <p className="text-sm text-white/80">United Arab Emirates</p>
-              </div>
-            </div>
-          </div>
+          <FeaturedHotels />
         </div>
       </div>
       
