@@ -58,18 +58,23 @@ const NavBar: React.FC = () => {
     }
   }, [user]);
 
-  // Forced browser-level redirect on logout
+  // Updated logout handler to use router navigation instead of window.location
   const handleLogout = async () => {
     try {
-      contextLogout();
+      // First handle the logout API call
       await fetch('/api/users/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      window.location.href = '/';
+      
+      // Then clear local auth state
+      contextLogout();
+      
+      // Use Next.js router for SPA navigation
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/';
+      router.push('/');
     }
   };
 
