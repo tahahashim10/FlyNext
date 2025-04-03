@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import LoginForm from '../../components/LoginForm';
 import { LogIn } from 'lucide-react';
@@ -52,12 +53,12 @@ export default function LoginPage() {
             <LoginForm />
           </div>
 
-          {/* Additional Context */}
+          {/* Additional Context - Updated to use Next.js Link */}
           <div className="text-center mt-6 text-sm text-muted">
             Don't have an account? {' '}
-            <a href="/signup" className="text-primary hover:underline">
+            <Link href="/signup" className="text-primary hover:underline">
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </div>
