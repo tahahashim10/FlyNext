@@ -1,12 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import FlightSearchForm from '../components/FlightSearchForm';
 import HotelSearchForm from '../components/HotelSearchForm';
 import { Plane, Hotel } from 'lucide-react';
+import CookiePolicyModal from '../components/CookiePolicyModal';
+import Link from 'next/link';
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights');
+
+  useEffect(() => {
+    // Check URL parameters for tab
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'hotels') {
+      setActiveTab('hotels');
+    } else if (tabParam === 'flights') {
+      setActiveTab('flights');
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -24,7 +38,7 @@ export default function HomePage() {
       </div>
 
       {/* Search container that overlaps hero and content */}
-      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-25">
+      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-25 search-section">
         <div className="bg-card shadow-lg rounded-xl overflow-visible">
           {/* Tab navigation */}
           <div className="flex border-b border-border">
@@ -145,7 +159,7 @@ export default function HomePage() {
         </div>
       </div>
       
-      {/* Footer (could be moved to a separate component) */}
+      {/* Footer */}
       <footer className="bg-card border-t border-border mt-auto">
         <div className="container mx-auto py-10 px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -157,36 +171,104 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-muted hover:text-primary">Search Hotels</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">Search Flights</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">My Bookings</a></li>
+                <li>
+                  <Link 
+                    href="/?tab=hotels" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Search Hotels
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/?tab=flights" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Search Flights
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/bookings/user" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    My Bookings
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/hotels/management" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Hotel Management
+                  </Link>
+                </li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
+              <h4 className="font-semibold mb-4">Verify</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-muted hover:text-primary">Help Center</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">Contact Us</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">FAQs</a></li>
+                <li>
+                  <Link 
+                    href="/bookings/verifyFlight" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Verify Flight
+                  </Link>
+                </li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-muted hover:text-primary">Terms & Conditions</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">Privacy Policy</a></li>
-                <li><a href="#" className="text-muted hover:text-primary">Cookie Policy</a></li>
+                <li>
+                  <Link 
+                    href="/terms-and-conditions" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Terms & Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/privacy-policy" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    href="/accessibility" 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted hover:text-primary"
+                  >
+                    Accessibility
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-border mt-8 pt-8 text-sm text-center text-muted">
             <p>&copy; {new Date().getFullYear()} FlyNext. All rights reserved.</p>
+            <p className="mt-1">
+              Designed with <span className="text-primary">♥</span> for travelers around the world.
+            </p>
           </div>
         </div>
       </footer>
+
+      <CookiePolicyModal />
     </div>
   );
 }
