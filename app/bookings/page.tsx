@@ -589,7 +589,7 @@ export default function BookingFormPage() {
                     {bookingData.flightIds.includes(',') && (
                       <div className="mt-2 text-xs text-primary font-medium flex items-center">
                         <AlertTriangle className="h-3 w-3 mr-1" />
-                        Multiple flight IDs detected. Using the last flight for destination city autofill.
+                        Multiple flight IDs detected. Using the last flight for destination city.
                       </div>
                     )}
                   </div>
