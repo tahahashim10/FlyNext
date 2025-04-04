@@ -19,7 +19,7 @@ function BookingFormContent() {
   const preCheckOut = searchParams.get('checkOut') || '';
   const preFlightIds = searchParams.get('flightIds') || '';
   const preDestinationCity = searchParams.get('destinationCity') || '';
-  const initialTab = searchParams.get('tab') === 'flight' ? 'flight' : 'hotel';
+  const initialTab = searchParams.get('tab') === 'hotel' ? 'hotel' : 'flight';
   
   const [bookingData, setBookingData] = useState({
     hotelId: preHotelId,
@@ -300,19 +300,9 @@ function BookingFormContent() {
               <p>{success}</p>
             </div>
           )}
-          {/* Tab navigation */}
+
+          {/* Tab navigation - Switched order: Flight tab first, Hotel tab second */}
           <div className="flex border-b border-border">
-            <button
-              onClick={() => setActiveTab('hotel')}
-              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
-                activeTab === 'hotel' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-muted hover:text-foreground'
-              }`}
-            >
-              <Hotel className="mr-2 h-5 w-5" />
-              Hotel Booking
-            </button>
             <button
               onClick={() => setActiveTab('flight')}
               className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
@@ -324,7 +314,19 @@ function BookingFormContent() {
               <Plane className="mr-2 h-5 w-5" />
               Flight Booking
             </button>
+            <button
+              onClick={() => setActiveTab('hotel')}
+              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
+                activeTab === 'hotel' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted hover:text-foreground'
+              }`}
+            >
+              <Hotel className="mr-2 h-5 w-5" />
+              Hotel Booking
+            </button>
           </div>
+
           {/* Form area */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -562,8 +564,29 @@ function BookingFormContent() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Complete Booking button for Hotel tab */}
+                  <div className="pt-4 border-t border-border">
+                    <button 
+                      type="submit" 
+                      className="btn-primary w-full h-12 flex items-center justify-center text-lg"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                          Processing Booking...
+                        </>
+                      ) : (
+                        <>
+                          Complete Booking
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
+
               {/* Flight Booking Section */}
               {activeTab === 'flight' && (
                 <div className="space-y-4">
