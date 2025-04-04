@@ -44,7 +44,7 @@ services:
   flynext:
     build:
       context: .
-      dockerfile: Dockerfile.app
+      dockerfile: Dockerfile
     container_name: flynext-app
     restart: always
     ports:
@@ -67,8 +67,8 @@ services:
 
   afs:
     build:
-      context: .
-      dockerfile: Dockerfile.afs
+      context: ./afs
+      dockerfile: Dockerfile
     container_name: flynext-afs
     restart: always
     ports:
@@ -79,8 +79,14 @@ services:
     environment:
       - DATABASE_URL=postgresql://${AFS_DB_USER:-afsuser}:${AFS_DB_PASSWORD:-afspass}@afs-db:5432/${AFS_DB_NAME:-afsdb}?schema=public
       - AFS_API_KEY=${AFS_API_KEY:-your_afs_api_key_here}
+      - NODE_ENV=production
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/api/cities || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   flynext-postgres-data:
