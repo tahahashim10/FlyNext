@@ -1,0 +1,3 @@
+https://flynext.ca/
+
+If our domain gets stolen you can also use https://flynext-deploy-v4st.vercel.app/
