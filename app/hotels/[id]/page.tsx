@@ -201,7 +201,7 @@ export default function HotelDetailPage() {
           {/* Map */}
           {hotel.coordinates && hotel.coordinates.lat && hotel.coordinates.lng ? (
             <div 
-              className="mt-4 h-52 rounded-lg overflow-hidden border border-border"
+              className="mt-4 h-72 w-full rounded-lg overflow-hidden border border-border"
               style={{ position: 'relative', zIndex: 1 }}
             >
               <OSMMap lat={hotel.coordinates.lat} lng={hotel.coordinates.lng} />
