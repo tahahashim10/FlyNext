@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import Modal from '../../../components/Modal';
 import RoomAvailability from '../../../components/RoomAvailability';
+import RoomImageCarousel from '../../../components/RoomImageCarousel';
+import HotelLogo from '../../../components/HotelLogo';
 
 interface HotelDetail {
   id: number;
@@ -116,17 +118,7 @@ export default function HotelDetailPage() {
       {/* Hotel Header */}
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         <div className="md:w-1/3">
-          {hotel.logo ? (
-            <img
-              src={hotel.logo}
-              alt={hotel.name}
-              className="w-full h-64 object-cover rounded-lg shadow-md"
-            />
-          ) : (
-            <div className="w-full h-64 bg-muted/20 rounded-lg flex items-center justify-center">
-              <span className="text-lg text-muted">No logo available</span>
-            </div>
-          )}
+          <HotelLogo logo={hotel.logo} name={hotel.name} />
         </div>
         
         <div className="flex-1">
@@ -266,20 +258,7 @@ export default function HotelDetailPage() {
             {hotel.rooms.map((room) => (
               <div key={room.id} className="bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-card transition-all">
                 {/* Room images carousel */}
-                {room.images.length > 0 && (
-                  <div className="relative h-48 bg-muted/10">
-                    <img
-                      src={room.images[0]}
-                      alt={`${room.type} view`}
-                      className="w-full h-full object-cover"
-                    />
-                    {room.images.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-card/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs">
-                        +{room.images.length - 1} more photos
-                      </div>
-                    )}
-                  </div>
-                )}
+                <RoomImageCarousel images={room.images} roomName={room.type} />
                 
                 <div className="p-4">
                   <div className="flex justify-between items-start">
