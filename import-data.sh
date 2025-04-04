@@ -9,18 +9,18 @@ if ! docker-compose --env-file .env.docker ps | grep -q flynext; then
   exit 1
 fi
 
-# Set up AFS database and import data
-echo "Running AFS migrations..."
-docker-compose --env-file .env.docker exec afs npx prisma migrate deploy
+# Reset AFS database and import data
+echo "Resetting AFS database..."
+docker-compose --env-file .env.docker exec afs npx prisma migrate reset --force
 
 echo "Importing AFS data..."
 docker-compose --env-file .env.docker exec afs node prisma/data/import_data
 docker-compose --env-file .env.docker exec afs node prisma/data/generate_flights
 docker-compose --env-file .env.docker exec afs node prisma/data/import_agencies
 
-# Set up FlyNext database
-echo "Running FlyNext migrations..."
-docker-compose --env-file .env.docker exec flynext npx prisma migrate deploy
+# Reset FlyNext database
+echo "Resetting FlyNext database..."
+docker-compose --env-file .env.docker exec flynext npx prisma migrate reset --force
 
 # Fetch cities and airports data (now that AFS is confirmed available)
 echo "Fetching cities and airports..."
