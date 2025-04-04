@@ -87,11 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
           
         // If no profile picture is provided, generate a default one
-        const finalProfilePicture = profilePicture 
-            ? (isValidUrl(profilePicture) 
-                ? profilePicture 
-                : NextResponse.json({ error: "Profile picture must be a valid URL." }, { status: 400 }))
-            : generateInitialAvatar(firstName);
+        const finalProfilePicture = profilePicture ? profilePicture : generateInitialAvatar(firstName);
 
         // Hash the password
         const hashedPassword = await hashPassword(password);
