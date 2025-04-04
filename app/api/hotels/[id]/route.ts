@@ -6,24 +6,21 @@ import { verifyToken } from '@/utils/auth';
 // don't add verification token because this user story is for visitors (U13)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ): Promise<NextResponse> {
-    const { id } = await params;
+    const id = context.params.id;
     // Validate that an id is provided and that it is a valid number
     if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: "Valid Hotel ID is required" }, { status: 400 });
     }
-
     try {
         const hotel = await prisma.hotel.findUnique({
             where: { id: Number(id) },
             include: { rooms: true }, // get all related room details for this hotel id
         });
-
         if (!hotel) {
         return NextResponse.json({ error: "Hotel not found" }, { status: 404 });
         }
-
         let coordinates;
         try {
             coordinates = await geocodeAddress(`${hotel.address}, ${hotel.location}`);
@@ -31,7 +28,6 @@ export async function GET(
             console.error("Geocoding error:", err);
             coordinates = { lat: null, lng: null };
         }
-
         // build detailed hotel data object to return.
         const data = {
             id: hotel.id,
@@ -53,9 +49,7 @@ export async function GET(
                 }
             )),
         };
-
         return NextResponse.json(data, { status: 200 });
-
     } catch (error: any) {
         console.error("Error retrieving hotel details:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -64,19 +58,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ): Promise<NextResponse> {
-
   // Verify the token first
   const tokenData = await verifyToken(request);
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   try {
-    const { id } = await params;
+    const id = context.params.id;
     const { name, logo, address, location, starRating, images } = await request.json();
-
     // Validate required fields (if provided)
     if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
       return NextResponse.json({ error: "Hotel name must be a non-empty string." }, { status: 400 });
@@ -103,7 +94,6 @@ export async function PUT(
         }
       }
     }
-
     // Verify hotel exists
     const existingHotel = await prisma.hotel.findUnique({
       where: { id: parseInt(id) },
@@ -111,12 +101,10 @@ export async function PUT(
     if (!existingHotel) {
       return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
     }
-
     // Ensure that the authenticated user owns this hotel
     if (existingHotel.ownerId !== tokenData.userId) {
       return NextResponse.json({ error: "Forbidden: You do not own this hotel." }, { status: 403 });
     }
-
     // Update only fields that are provided
     const updatedHotel = await prisma.hotel.update({
       where: { id: parseInt(id) },
@@ -129,7 +117,6 @@ export async function PUT(
         images: images !== undefined ? images : existingHotel.images,
       },
     });
-
     return NextResponse.json(updatedHotel, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -138,7 +125,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ): Promise<NextResponse> {
   
   // Verify the token first
@@ -146,14 +133,12 @@ export async function DELETE(
   if (!tokenData) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   try {
-    const { id } = await params;
+    const id = context.params.id;
     const idNumber = Number(id);
     if (isNaN(idNumber)) {
       return NextResponse.json({ error: "Invalid hotel id. Must be a number." }, { status: 400 });
     }
-
     // Verify hotel exists
     const existingHotel = await prisma.hotel.findUnique({
       where: { id: parseInt(id) },
@@ -161,16 +146,13 @@ export async function DELETE(
     if (!existingHotel) {
       return NextResponse.json({ error: 'Hotel not found' }, { status: 404 });
     }
-
     // Ensure that the authenticated user owns this hotel
     if (existingHotel.ownerId !== tokenData.userId) {
       return NextResponse.json({ error: "Forbidden: You do not own this hotel." }, { status: 403 });
     }
-
     await prisma.hotel.delete({
       where: { id: parseInt(id) },
     });
-
     return NextResponse.json({ message: 'Hotel deleted successfully' }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
