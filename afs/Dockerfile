@@ -5,8 +5,8 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-# Copy package files
-COPY afs/package.json afs/package-lock.json ./
+# Copy package files from the current directory (afs/)
+COPY package.json package-lock.json ./
 
 # Rebuild node modules for the container architecture
 RUN npm rebuild bcrypt
@@ -15,7 +15,7 @@ RUN npm rebuild bcrypt
 RUN npm ci
 
 # Copy the rest of the application
-COPY afs/ .
+COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -26,5 +26,5 @@ RUN npm run build
 # Expose the port the app runs on
 EXPOSE 3001
 
-# Command to run the app
-CMD ["npm", "run", "start"]
+# Command to run the app (ensure it binds to all interfaces)
+CMD ["npx", "next", "start", "-H", "0.0.0.0", "-p", "3001"]
