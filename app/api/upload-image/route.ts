@@ -12,9 +12,9 @@ export async function POST(request: Request) {
     // Parse form data to extract the file
     const formData = await request.formData();
     const file = formData.get('file');
-    if (!file || !(file instanceof File)) {
+    if (!file || !(file instanceof Blob)) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
+    }    
 
     // Convert file to a Buffer
     const arrayBuffer = await file.arrayBuffer();

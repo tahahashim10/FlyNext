@@ -57,11 +57,10 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ error: "Phone number must be valid (10 to 15 digits, optional '+' prefix)." }, { status: 400 });
       }
     }
-    if (profilePicture !== undefined) {
-      if (typeof profilePicture !== "string" || profilePicture.trim() === "" || !isValidUrl(profilePicture)) {
-        return NextResponse.json({ error: "Profile picture must be a valid URL." }, { status: 400 });
-      }
+    if (profilePicture !== undefined && (typeof profilePicture !== "string" || profilePicture.trim() === "")) {
+      return NextResponse.json({ error: "Profile picture must be a non-empty string." }, { status: 400 });
     }
+    
 
     // Check if user exists.
     const existingUser = await prisma.user.findUnique({
