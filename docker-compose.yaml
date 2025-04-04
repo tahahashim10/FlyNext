@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  flynext-db:
+    image: postgres:14-alpine
+    container_name: flynext-db
+    restart: always
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${FLYNEXT_DB_USER:-flynextuser}
+      POSTGRES_PASSWORD: ${FLYNEXT_DB_PASSWORD:-flynextpass}
+      POSTGRES_DB: ${FLYNEXT_DB_NAME:-flynextdb}
+    volumes:
+      - flynext-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FLYNEXT_DB_USER:-flynextuser} -d ${FLYNEXT_DB_NAME:-flynextdb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+      
+  afs-db:
+    image: postgres:14-alpine
+    container_name: afs-db
+    restart: always
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: ${AFS_DB_USER:-afsuser}
+      POSTGRES_PASSWORD: ${AFS_DB_PASSWORD:-afspass}
+      POSTGRES_DB: ${AFS_DB_NAME:-afsdb}
+    volumes:
+      - afs-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AFS_DB_USER:-afsuser} -d ${AFS_DB_NAME:-afsdb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  flynext:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: flynext-app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      flynext-db:
+        condition: service_healthy
+      afs:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://${FLYNEXT_DB_USER:-flynextuser}:${FLYNEXT_DB_PASSWORD:-flynextpass}@flynext-db:5432/${FLYNEXT_DB_NAME:-flynextdb}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_here}
+      - AFS_BASE_URL=http://afs:3001
+      - AFS_API_KEY=${AFS_API_KEY:-your_afs_api_key_here}
+      - IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
+      - IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
+      - IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
+    networks:
+      - app_network
+
+  afs:
+    build:
+      context: .
+      dockerfile: Dockerfile.afs
+    container_name: flynext-afs
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      afs-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${AFS_DB_USER:-afsuser}:${AFS_DB_PASSWORD:-afspass}@afs-db:5432/${AFS_DB_NAME:-afsdb}?schema=public
+      - AFS_API_KEY=${AFS_API_KEY:-your_afs_api_key_here}
+    networks:
+      - app_network
+
+volumes:
+  flynext-postgres-data:
+  afs-postgres-data:
+
+networks:
+  app_network:
+    driver: bridge
