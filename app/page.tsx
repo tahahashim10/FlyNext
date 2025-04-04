@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import FlightSearchForm from '../components/FlightSearchForm';
 import HotelSearchForm from '../components/HotelSearchForm';
@@ -10,7 +10,36 @@ import CookiePolicyModal from '../components/CookiePolicyModal';
 import Link from 'next/link';
 import FeaturedHotels from '../components/FeaturedHotels';
 
-export default function HomePage() {
+// Loading component for Suspense fallback
+function HomePageLoading() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Hero section with background image */}
+      <div className="relative h-[50vh] lg:h-[60vh] w-full bg-gradient-to-r from-secondary to-primary/40">
+        <div className="absolute inset-0 bg-[url('/hero-travel.jpg')] bg-cover bg-center mix-blend-overlay opacity-60"></div>
+        <div className="container mx-auto h-full flex flex-col justify-center items-center text-white px-4">
+          <div className="w-full max-w-md animate-pulse">
+            <div className="h-10 bg-white/30 rounded mb-4"></div>
+            <div className="h-5 bg-white/30 rounded w-3/4 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search container loading state */}
+      <div className="container mx-auto px-4 -mt-16 mb-10 relative z-25 search-section">
+        <div className="bg-card shadow-lg rounded-xl p-6">
+          <div className="animate-pulse">
+            <div className="h-10 bg-muted/50 rounded mb-4"></div>
+            <div className="h-24 bg-muted/50 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Component that uses useSearchParams
+function HomeContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights');
 
@@ -130,5 +159,14 @@ export default function HomePage() {
 
       <CookiePolicyModal />
     </div>
+  );
+}
+
+// Main component with Suspense
+export default function HomePage() {
+  return (
+    <Suspense fallback={<HomePageLoading />}>
+      <HomeContent />
+    </Suspense>
   );
 }

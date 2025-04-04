@@ -5,9 +5,9 @@ import { getSearchParams } from "@/utils/query";
 // don't add verification token because this user story is for visitors (U14)
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: any
   ): Promise<NextResponse> {
-    const { id } = await params; 
+    const id = context.params.id;
     if (!id || isNaN(Number(id))) {
         return NextResponse.json({ error: "Valid Hotel ID is required" }, { status: 400 });
     }

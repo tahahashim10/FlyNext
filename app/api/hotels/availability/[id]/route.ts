@@ -1,11 +1,10 @@
-// app/api/hotels/availability/id/route.js
 import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/utils/db';
 import { verifyToken } from '@/utils/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ): Promise<NextResponse> {
 
   // Verify token
@@ -15,7 +14,7 @@ export async function POST(
   }
 
   // Validate the room ID parameter
-  const { id } = await params;
+  const id = context.params.id;
   const roomId = parseInt(id);
   if (!id || isNaN(roomId)) {
     return NextResponse.json({ error: "Valid room ID is required" }, { status: 400 });

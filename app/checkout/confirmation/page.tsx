@@ -1,18 +1,33 @@
-
 'use client';
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { Download, CheckCircle, AlertCircle } from "lucide-react";
-import Link from "next/link";
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-export default function ConfirmationPage() {
+// Loading component to show while the search params are loading
+function SearchParamsLoading() {
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center bg-muted/5 py-12 px-4">
+      <div className="max-w-md w-full bg-card p-8 rounded-xl shadow-md border border-border text-center">
+        <div className="animate-pulse">
+          <div className="h-16 w-16 bg-muted/50 rounded-full mx-auto mb-4"></div>
+          <div className="h-8 bg-muted/50 rounded w-3/4 mx-auto mb-2"></div>
+          <div className="h-4 bg-muted/50 rounded w-1/2 mx-auto mb-6"></div>
+          <div className="h-12 bg-muted/50 rounded mb-4"></div>
+          <div className="h-12 bg-muted/50 rounded mb-4"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Component that uses useSearchParams
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const invoicePayloadEncoded = searchParams.get("invoicePayload");
   const totalCost = searchParams.get("totalCost");
-  const [error, setError] = useState("");
-  const [downloading, setDownloading] = useState(false);
-  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [error, setError] = React.useState("");
+  const [downloading, setDownloading] = React.useState(false);
+  const [downloadComplete, setDownloadComplete] = React.useState(false);
 
   const handleDownloadInvoice = async () => {
     setError("");
@@ -61,14 +76,15 @@ export default function ConfirmationPage() {
       setDownloading(false);
     }
   };
-  
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center bg-muted/5 py-12 px-4">
       <div className="max-w-md w-full bg-card p-8 rounded-xl shadow-md border border-border">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <CheckCircle className="h-16 w-16 text-green-500" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-16 w-16 text-green-500">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
           <h2 className="text-2xl font-bold mb-2">Booking Confirmed!</h2>
           <p className="text-muted mb-6">
@@ -87,14 +103,18 @@ export default function ConfirmationPage() {
           
           {error && (
             <div className="flex items-center space-x-2 p-3 bg-destructive/10 text-destructive rounded-lg text-sm mb-6">
-              <AlertCircle className="h-4 w-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-4 w-4">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span>{error}</span>
             </div>
           )}
           
           {downloadComplete && !error && (
             <div className="flex items-center space-x-2 p-3 bg-green-500/10 text-green-700 rounded-lg text-sm mb-6">
-              <CheckCircle className="h-4 w-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-4 w-4">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span>Invoice downloaded successfully!</span>
             </div>
           )}
@@ -111,22 +131,33 @@ export default function ConfirmationPage() {
               </>
             ) : (
               <>
-                <Download className="h-5 w-5 mr-2" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
                 Download Invoice
               </>
             )}
           </button>
           
           <div className="space-y-3">
-            <Link href="/bookings/user" className="btn-outline w-full block text-center">
+            <a href="/bookings/user" className="btn-outline w-full block text-center">
               View My Bookings
-            </Link>
-            <Link href="/" className="text-primary hover:underline block text-center">
+            </a>
+            <a href="/" className="text-primary hover:underline block text-center">
               Return to Home
-            </Link>
+            </a>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component that wraps the content with Suspense
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<SearchParamsLoading />}>
+      <ConfirmationContent />
+    </Suspense>
   );
 }
