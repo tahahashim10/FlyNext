@@ -1,6 +1,5 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import HotelSuggestionsPanel from '@/components/HotelSuggestionsPanel';
 import RoomSuggestionsPanel from '@/components/RoomSuggestionsPanel';
@@ -8,10 +7,11 @@ import FlightSuggestionsPanel from '@/components/FlightSuggestionsPanel';
 import CitySuggestionsDropdown from '@/components/CitySuggestionsDropdown';
 import { Hotel, Plane, Calendar, User, Mail, CreditCard, Search, AlertTriangle, CheckCircle, RefreshCw, MapPin } from 'lucide-react';
 
-export default function BookingFormPage() {
+// Create a component that uses search params
+function BookingFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  
   // Pre-populate fields from query parameters if available.
   const preHotelId = searchParams.get('hotelId') || '';
   const preRoomId = searchParams.get('roomId') || '';
@@ -19,7 +19,8 @@ export default function BookingFormPage() {
   const preCheckOut = searchParams.get('checkOut') || '';
   const preFlightIds = searchParams.get('flightIds') || '';
   const preDestinationCity = searchParams.get('destinationCity') || '';
-
+  const initialTab = searchParams.get('tab') === 'hotel' ? 'hotel' : 'flight';
+  
   const [bookingData, setBookingData] = useState({
     hotelId: preHotelId,
     roomId: preRoomId,
@@ -33,16 +34,17 @@ export default function BookingFormPage() {
     email: '',
     passportNumber: ''
   });
+  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  
   // Toggle suggestion panels
   const [showHotelSuggestions, setShowHotelSuggestions] = useState(false);
   const [showRoomSuggestions, setShowRoomSuggestions] = useState(false);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
-
+  
   // Use the query param "tab" to set the initial active tab.
-  const initialTab = searchParams.get('tab') === 'flight' ? 'flight' : 'hotel';
   const [activeTab, setActiveTab] = useState<'hotel' | 'flight'>(initialTab);
   
   // State for city autocomplete (for destinationCity)
@@ -50,7 +52,7 @@ export default function BookingFormPage() {
   const [showCitySuggestionsFlightTab, setShowCitySuggestionsFlightTab] = useState(false);
   // New state for departure city autocomplete
   const [showDepartureCitySuggestions, setShowDepartureCitySuggestions] = useState(false);
-
+  
   // When flightIds changes, prepopulate destinationCity from the flight's route
   useEffect(() => {
     async function fetchFlightDestination() {
@@ -113,7 +115,6 @@ export default function BookingFormPage() {
         setShowCitySuggestionsFlightTab(false);
       }
     }
-
     // When departure city changes, show suggestions if input length >= 2
     if (e.target.name === 'departureCity') {
       if (e.target.value.trim().length >= 2) {
@@ -123,7 +124,7 @@ export default function BookingFormPage() {
       }
     }
   };
-
+  
   const clearForm = () => {
     setBookingData({
       hotelId: '',
@@ -139,7 +140,7 @@ export default function BookingFormPage() {
       passportNumber: ''
     });
   };
-
+  
   // State to track if we're loading flight suggestions
   const [loadingFlights, setLoadingFlights] = useState(false);
   
@@ -161,14 +162,14 @@ export default function BookingFormPage() {
       setLoadingFlights(false);
     }, 1000);
   };
-
+  
   useEffect(() => {
     // If departure city is cleared, hide flight suggestions
     if (!bookingData.departureCity || bookingData.departureCity.trim() === '') {
       setShowFlightSuggestions(false);
     }
   }, [bookingData.departureCity]);
-
+  
   // Toggle show room suggestions when relevant data changes
   useEffect(() => {
     if (bookingData.hotelId && bookingData.checkIn && bookingData.checkOut) {
@@ -177,7 +178,7 @@ export default function BookingFormPage() {
       setShowRoomSuggestions(false);
     }
   }, [bookingData.hotelId, bookingData.checkIn, bookingData.checkOut]);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -282,7 +283,6 @@ export default function BookingFormPage() {
           </p>
         </div>
       </div>
-
       {/* Main content container that overlaps hero */}
       <div className="container mx-auto px-4 -mt-16 mb-10 relative z-25">
         <div className="bg-card shadow-lg rounded-xl overflow-visible">
@@ -301,19 +301,8 @@ export default function BookingFormPage() {
             </div>
           )}
 
-          {/* Tab navigation */}
+          {/* Tab navigation - Switched order: Flight tab first, Hotel tab second */}
           <div className="flex border-b border-border">
-            <button
-              onClick={() => setActiveTab('hotel')}
-              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
-                activeTab === 'hotel' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-muted hover:text-foreground'
-              }`}
-            >
-              <Hotel className="mr-2 h-5 w-5" />
-              Hotel Booking
-            </button>
             <button
               onClick={() => setActiveTab('flight')}
               className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
@@ -324,6 +313,17 @@ export default function BookingFormPage() {
             >
               <Plane className="mr-2 h-5 w-5" />
               Flight Booking
+            </button>
+            <button
+              onClick={() => setActiveTab('hotel')}
+              className={`flex-1 py-4 text-center font-medium text-lg transition-colors flex items-center justify-center ${
+                activeTab === 'hotel' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted hover:text-foreground'
+              }`}
+            >
+              <Hotel className="mr-2 h-5 w-5" />
+              Hotel Booking
             </button>
           </div>
 
@@ -564,6 +564,26 @@ export default function BookingFormPage() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Complete Booking button for Hotel tab */}
+                  <div className="pt-4 border-t border-border">
+                    <button 
+                      type="submit" 
+                      className="btn-primary w-full h-12 flex items-center justify-center text-lg"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                          Processing Booking...
+                        </>
+                      ) : (
+                        <>
+                          Complete Booking
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -751,7 +771,6 @@ export default function BookingFormPage() {
           </div>
         </div>
       </div>
-
       {/* Benefits section */}
       <div className="container mx-auto py-8 px-4">
         <h2 className="text-2xl font-bold text-center mb-8">Benefits of Booking with FlyNext</h2>
@@ -789,5 +808,14 @@ export default function BookingFormPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component that wraps the form content with Suspense
+export default function BookingFormPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading booking form...</div>}>
+      <BookingFormContent />
+    </Suspense>
   );
 }

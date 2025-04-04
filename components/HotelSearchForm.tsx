@@ -316,7 +316,7 @@ const HotelSearchForm: React.FC<HotelSearchFormProps> = ({
                 <select
                   value={starRating}
                   onChange={(e) => setStarRating(e.target.value)}
-                  className="input input-bordered w-full pl-16 focus:pl-16 appearance-none bg-background text-foreground"
+                  className="input input-bordered w-full pl-16 focus:pl-16 appearance-none bg-background text-foreground [&>option]:bg-background"
                   style={{ paddingLeft: '2.5rem' }}
                 >
                   <option value="">Any Rating</option>
