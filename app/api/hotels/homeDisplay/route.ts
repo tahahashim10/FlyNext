@@ -31,6 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 location: hotel.location,
                 starRating: hotel.starRating,
                 startingPrice,
+                images: hotel.images || [], // Include the images array
                 coordinates: { lat: null, lng: null } // Not needed for homepage display
             };
         });
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
         // Convert map back to array and take top 4
         const topHotels = Array.from(locationMap.values()).slice(0, 4);
-
+        
         return NextResponse.json({ results: topHotels }, { status: 200 });
     } catch (error: any) {
         console.error("Error retrieving top hotels:", error.stack);

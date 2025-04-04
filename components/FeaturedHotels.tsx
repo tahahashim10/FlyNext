@@ -13,6 +13,7 @@ interface Hotel {
   location: string;
   starRating: number;
   startingPrice: number;
+  images?: string[];
   coordinates: {
     lat: number | null;
     lng: number | null;
@@ -29,7 +30,6 @@ const FeaturedHotels: React.FC<FeaturedHotelsProps> = ({
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState<number | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const FeaturedHotels: React.FC<FeaturedHotelsProps> = ({
 
         const data = await response.json();
         
-        // The API already sorts and filters, so we can use the results directly
+        // The API now includes images in the response
         setHotels(data.results);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -109,93 +109,110 @@ const FeaturedHotels: React.FC<FeaturedHotelsProps> = ({
     );
   }
 
+  // Get the hotel image to display (first gallery image, logo, or fallback)
+  const getHotelImage = (hotel: Hotel) => {
+    // First priority: use the first image from the hotel's gallery if available
+    if (hotel.images && hotel.images.length > 0) {
+      return hotel.images[0];
+    }
+    // Second priority: use the logo if it's a regular image URL
+    else if (hotel.logo && !hotel.logo.startsWith('data:image/svg')) {
+      return hotel.logo;
+    }
+    // No suitable image available
+    return null;
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {hotels.map((hotel) => (
-        <div 
-          key={hotel.id}
-          className="group relative hover-trigger"
-        >
-          <div className="relative rounded-lg overflow-hidden h-64 shadow-md transition-all duration-300 group-hover:shadow-xl transform group-hover:-translate-y-1">
-            {/* Gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
-            
-            {/* Hotel logo as background with fallback */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10">
-              {/* If the logo is an image URL, use it as background */}
-              {hotel.logo && !hotel.logo.startsWith('data:image/svg') ? (
-                <img 
-                  src={hotel.logo} 
-                  alt={`${hotel.name} logo`} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // On error, show a fallback gradient
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                // If it's an SVG data URL or no logo, show a nice gradient with the first letter
-                <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
-                  <span className="text-6xl font-bold text-white">{hotel.name.charAt(0)}</span>
-                </div>
-              )}
-            </div>
+      {hotels.map((hotel) => {
+        const hotelImage = getHotelImage(hotel);
+        
+        return (
+          <div 
+            key={hotel.id}
+            className="group relative hover-trigger"
+          >
+            <div className="relative rounded-lg overflow-hidden h-64 shadow-md transition-all duration-300 group-hover:shadow-xl transform group-hover:-translate-y-1">
+              {/* Gradient overlay for better text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
+              
+              {/* Hotel image as background with fallback */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10">
+                {hotelImage ? (
+                  <img 
+                    src={hotelImage} 
+                    alt={`${hotel.name}`} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // On error, show a fallback gradient
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  // If no image available, show a nice gradient with the first letter
+                  <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
+                    <span className="text-6xl font-bold text-white">{hotel.name.charAt(0)}</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Hotel details - the part that's always visible */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 z-20 text-white">
-              <div className="flex items-center mb-1 space-x-1">
-                {renderStars(hotel.starRating)}
+              {/* Hotel details - the part that's always visible */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 z-20 text-white">
+                <div className="flex items-center mb-1 space-x-1">
+                  {renderStars(hotel.starRating)}
+                </div>
+                <h3 className="font-semibold text-lg group-hover:text-primary-foreground transition-colors">{hotel.name}</h3>
+                <p className="text-sm text-white/90">{hotel.location}</p>
+                {hotel.startingPrice && (
+                  <p className="text-sm font-medium mt-1">
+                    From <span className="text-primary-foreground">${hotel.startingPrice}</span> per night
+                  </p>
+                )}
               </div>
-              <h3 className="font-semibold text-lg group-hover:text-primary-foreground transition-colors">{hotel.name}</h3>
-              <p className="text-sm text-white/90">{hotel.location}</p>
-              {hotel.startingPrice && (
-                <p className="text-sm font-medium mt-1">
-                  From <span className="text-primary-foreground">${hotel.startingPrice}</span> per night
-                </p>
+              
+            {/* The content that appears on hover for non-authenticated users */}
+              {!user && (
+                <div className="absolute inset-0 z-40 bg-black/75 backdrop-blur-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-lg flex items-center justify-center">
+                  <div className="flex flex-col items-center justify-center z-50">
+                    <div className="bg-white/10 p-3 rounded-full mb-3 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 transform translate-y-4 group-hover:translate-y-0">
+                      <LogIn className="h-6 w-6 text-white" />
+                    </div>
+                    <p className="text-center font-medium mb-4 text-white max-w-[80%] opacity-0 group-hover:opacity-100 transition-all duration-300 delay-150 transform translate-y-4 group-hover:translate-y-0">
+                      View hotel details and make bookings
+                    </p>
+                    <div className="flex space-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 transform translate-y-4 group-hover:translate-y-0">
+                      <Link 
+                        href="/login" 
+                        className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md font-medium transition-all duration-300 hover:shadow-lg relative"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Login
+                      </Link>
+                      <Link 
+                        href="/signup" 
+                        className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm px-4 py-2 rounded-md font-medium transition-all duration-300 hover:shadow-lg relative"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
             
-          {/* The content that appears on hover for non-authenticated users */}
-            {!user && (
-              <div className="absolute inset-0 z-40 bg-black/75 backdrop-blur-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 rounded-lg flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center z-50">
-                  <div className="bg-white/10 p-3 rounded-full mb-3 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 transform translate-y-4 group-hover:translate-y-0">
-                    <LogIn className="h-6 w-6 text-white" />
-                  </div>
-                  <p className="text-center font-medium mb-4 text-white max-w-[80%] opacity-0 group-hover:opacity-100 transition-all duration-300 delay-150 transform translate-y-4 group-hover:translate-y-0">
-                    View hotel details and make bookings
-                  </p>
-                  <div className="flex space-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 transform translate-y-4 group-hover:translate-y-0">
-                    <Link 
-                      href="/login" 
-                      className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md font-medium transition-all duration-300 hover:shadow-lg relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      href="/signup" 
-                      className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm px-4 py-2 rounded-md font-medium transition-all duration-300 hover:shadow-lg relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                </div>
-              </div>
+            {/* Card link - only for authenticated users */}
+            {user && (
+              <Link 
+                href={`/hotels/${hotel.id}`}
+                className="absolute inset-0 z-10"
+                aria-label={`View details for ${hotel.name}`}
+              ></Link>
             )}
           </div>
-          
-          {/* Card link - only for authenticated users */}
-          {user && (
-            <Link 
-              href={`/hotels/${hotel.id}`}
-              className="absolute inset-0 z-10"
-              aria-label={`View details for ${hotel.name}`}
-            ></Link>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
