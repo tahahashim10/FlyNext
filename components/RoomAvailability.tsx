@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, CheckSquare, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import RoomImageCarousel from '@/components/RoomImageCarousel';
 
 interface RoomType {
   id: number;
@@ -130,40 +131,40 @@ export default function RoomAvailability({
         <div className="p-4">
           <form onSubmit={handleSubmit} className="space-y-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+              <div className="flex-1">
                 <label className="text-sm font-medium text-muted mb-1 block flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Check-in Date
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Check-in Date
                 </label>
                 <div className="relative">
-                    <input
+                  <input
                     type="date"
                     value={checkIn}
                     min={today}
                     onChange={(e) => setCheckIn(e.target.value)}
                     className="w-full p-2 rounded-md border border-border bg-background dark:bg-card focus:outline-none focus:ring-2 focus:ring-primary/40 text-foreground dark:text-foreground appearance-none"
                     required
-                    />
-                    <Calendar className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-muted" />
+                  />
+                  <Calendar className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-muted" />
                 </div>
-                </div>
-                <div className="flex-1">
+              </div>
+              <div className="flex-1">
                 <label className="text-sm font-medium text-muted mb-1 block flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Check-out Date
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Check-out Date
                 </label>
                 <div className="relative">
-                    <input
+                  <input
                     type="date"
                     value={checkOut}
                     min={checkIn || today}
                     onChange={(e) => setCheckOut(e.target.value)}
                     className="w-full p-2 rounded-md border border-border bg-background dark:bg-card focus:outline-none focus:ring-2 focus:ring-primary/40 text-foreground dark:text-foreground appearance-none"
                     required
-                    />
-                    <Calendar className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-muted" />
+                  />
+                  <Calendar className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-muted" />
                 </div>
-                </div>
+              </div>
             </div>
             
             <button 
@@ -206,39 +207,53 @@ export default function RoomAvailability({
               <div className="divide-y divide-border">
                 {rooms.map((room) => (
                   <div key={room.id} className="py-4 first:pt-0 last:pb-0">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-lg">{room.name || room.type}</h4>
-                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                          <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                            ${room.pricePerNight} per night
-                          </span>
-                          <span className="text-sm text-muted">
-                            {room.remainingRooms || room.availableRooms || 0} available
-                          </span>
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                      {/* Room image carousel if images are available */}
+                      {room.images && room.images.length > 0 && (
+                        <div className="md:w-1/3 h-40 rounded-lg overflow-hidden">
+                          <RoomImageCarousel 
+                            images={room.images} 
+                            roomName={room.name || room.type || "Room"} 
+                          />
                         </div>
-                      </div>
+                      )}
                       
-                      <a 
-                        href={`/bookings?hotelId=${hotelId}&roomId=${room.id}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}
-                        className="btn-outline text-sm"
-                      >
-                        Book Now
-                      </a>
-                    </div>
-                    
-                    {room.amenities && room.amenities.length > 0 && (
-                      <div className="mt-3">
-                        <span className="text-xs text-muted mb-1 block">Amenities:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {room.amenities.map((amenity, index) => (
-                            <span key={index} className="text-xs bg-muted/20 px-2 py-0.5 rounded">
-                              {amenity}
-                            </span>
-                          ))}
+                      <div className={`${room.images && room.images.length > 0 ? 'md:w-2/3' : 'w-full'}`}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-lg">{room.name || room.type}</h4>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                ${room.pricePerNight} per night
+                              </span>
+                              <span className="text-sm text-muted">
+                                {room.remainingRooms || room.availableRooms || 0} available
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <a 
+                            href={`/bookings?hotelId=${hotelId}&roomId=${room.id}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`}
+                            className="btn-outline text-sm"
+                          >
+                            Book Now
+                          </a>
                         </div>
+                        
+                        {room.amenities && room.amenities.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted mb-1 block">Amenities:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {room.amenities.map((amenity, index) => (
+                                <span key={index} className="text-xs bg-muted/20 px-2 py-0.5 rounded">
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
