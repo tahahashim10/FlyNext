@@ -32,6 +32,7 @@ yarn-error.log*
 
 # push .env file as per assignment requirements
 .env
+afs/.env
 .env.docker
 
 # vercel
