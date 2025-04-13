@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  flynext-db:
+    image: postgres:14-alpine
+    container_name: flynext-db
+    restart: always
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${FLYNEXT_DB_USER}
+      POSTGRES_PASSWORD: ${FLYNEXT_DB_PASSWORD}
+      POSTGRES_DB: ${FLYNEXT_DB_NAME}
+    volumes:
+      - flynext-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FLYNEXT_DB_USER} -d ${FLYNEXT_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+      
+  afs-db:
+    image: postgres:14-alpine
+    container_name: afs-db
+    restart: always
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: ${AFS_DB_USER}
+      POSTGRES_PASSWORD: ${AFS_DB_PASSWORD}
+      POSTGRES_DB: ${AFS_DB_NAME}
+    volumes:
+      - afs-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AFS_DB_USER} -d ${AFS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  flynext:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flynext-app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      flynext-db:
+        condition: service_healthy
+      afs:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://${FLYNEXT_DB_USER}:${FLYNEXT_DB_PASSWORD}@flynext-db:5432/${FLYNEXT_DB_NAME}?schema=public
+      - JWT_SECRET=${JWT_SECRET}
+      - AFS_BASE_URL=http://afs:3001
+      - AFS_API_KEY=${AFS_API_KEY}
+      - IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
+      - IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
+      - IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
+    networks:
+      - app_network
+
+  afs:
+    build:
+      context: ./afs
+      dockerfile: Dockerfile
+    container_name: flynext-afs
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      afs-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${AFS_DB_USER}:${AFS_DB_PASSWORD}@afs-db:5432/${AFS_DB_NAME}?schema=public
+      - AFS_API_KEY=${AFS_API_KEY}
+      - NODE_ENV=production
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/api/cities || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  flynext-postgres-data:
+  afs-postgres-data:
+
+networks:
+  app_network:
+    driver: bridge
