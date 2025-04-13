@@ -31,7 +31,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # push .env file as per assignment requirements
-# .env*
+.env
+afs/.env
+.env.docker
 
 # vercel
 .vercel
