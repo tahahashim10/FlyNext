@@ -55,5 +55,4 @@ To run the application locally with Docker:
 
 ## Live Deployment
 
-You can access the deployed FlyNext application here:  
-**https://flynext.ca**
+You can access the deployed FlyNext application [here](https://flynext-deploy-v4st-tahahashim10s-projects.vercel.app/).
